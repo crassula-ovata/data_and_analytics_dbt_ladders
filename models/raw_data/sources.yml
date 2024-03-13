@@ -1,0 +1,55 @@
+
+version: 2
+
+sources:
+  - name: util_table_data
+    database: |
+      {%- if target.name=="dev" -%} DM_CO_CARE_COORD_DEV
+      {%- elif target.name=="qa" -%} DM_CO_CARE_COORD_QA
+      {%- elif target.name=="prod" -%} DM_CO_CARE_COORD_PROD
+      {%- elif target.name=="test-location" -%} DM_BHA_LOCATION_REDESIGN_1
+      {%- elif target.name=="test" -%} DM_CO_CARE_COORD_TEST
+      {%- else -%} invalid_database
+      {%- endif -%}    
+    schema: 
+      UTIL
+    tables:
+      - name: EXECUTION_LOG
+      - name: MESSAGE_LOG
+      - name: SQL_LOGS
+      - name: TASK_LOG    
+
+  - name: dm_table_data
+    database: |
+      {%- if target.name=="dev" -%} DM_CO_CARE_COORD_DEV
+      {%- elif target.name=="qa" -%} DM_CO_CARE_COORD_QA
+      {%- elif target.name=="prod" -%} DM_CO_CARE_COORD_PROD
+      {%- elif target.name=="test-location" -%} DM_BHA_LOCATION_REDESIGN_1
+      {%- elif target.name=="test" -%} DM_CO_CARE_COORD_TEST
+      {%- else -%} invalid_database
+      {%- endif -%}  
+    schema:
+      DM
+    tables:
+      - name: ACTION_TIME
+      - name: CASE_ALIAS
+      - name: CASE_CLIENT
+      - name: CASE_CLINIC
+      - name: CASE_COMMCARE_USER
+      - name: CASE_PROVIDER
+      - name: CASE_REFERRAL
+      - name: CASE_SERVICE
+      - name: CASE_UNIT
+      - name: LOCATION
+      - name: WEB_USER
+
+  - name: hades_table_data
+    database: 
+      HADES_PROD_BHA_DIMAGI_SHARE 
+    schema:
+      DM
+    tables:
+      - name: VWS_LADDERS_ACTIVE_LICENSES
+      - name: VWS_LADDERS_BHE_ACTIVE_LICENSES
+      - name: VWS_LADDERS_BHE_ONLY_ACTIVE_LICENSES
+      - name: VW_BHA_LADDERS_RAW               

@@ -1,0 +1,55 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
+name: 'data_and_analytics_dbt_bha_ladders'
+version: '1.0.0'
+config-version: 2
+
+vars:
+  owner_id_provder_dev: e92d7e31a2a844bca8529c28a05b938e
+  owner_id_provder_qa: 65dcdb063e2842d58fd943ea87740697
+  owner_id_provder_prod: 775d5b8c5f1147a6867dfa9ec2c6157e
+  owner_id_provder_test: c0cb05f6e88a4c19ab4aa3ad51d13d15
+  owner_id_provder_test_location: c0cb05f6e88a4c19ab4aa3ad51d13d15
+  owner_id_clinic_dev: 6fc5b9a0b5eb477f81fcd9cb0942cd12
+  owner_id_clinic_qa: a9c4c9da089b4840abbb5c4f10cbccd0
+  owner_id_clinic_prod: 29c59d3222b44ba08dda0e5c4d20b0fc
+  owner_id_clinic_test: 002e9d7507d140ce88872c6e6b7ed29b
+  owner_id_clinic_test_location: 002e9d7507d140ce88872c6e6b7ed29b  
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'data_and_analytics_dbt_bha_ladders'
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:         # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In this example config, we tell dbt to build all models in the example/
+# directory as views. These settings can be overridden in the individual model
+# files using the `{{ config(...) }}` macro.
+models:
+  data_and_analytics_dbt_bha_ladders:
+    DM:
+      +schema: DM    
+      +post-hook:
+        - "{{ create_external_id_format() }}"       
+        - "{{ create_extract_from_population_served() }}"       
+        - "{{ create_fn_insurance_display() }}"       
+        - "{{ create_fn_mental_health_settings_display() }}"       
+        - "{{ create_get_map_popup() }}"       
+
