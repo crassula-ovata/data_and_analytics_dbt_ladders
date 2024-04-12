@@ -5,7 +5,9 @@ dm_table_data_provider as (
 hades_table_data_ladders_active_licenses as (
       select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
 ), 
-
+locs as (
+      select * from  {{ source('dm_table_data', 'LOCATION') }}
+),
 p_share as (
     select 
         distinct
@@ -34,6 +36,7 @@ p_prod as (
         distinct
         case_id, 
         trim(external_id) as external_id, 
+        owner_id,
         date_opened, 
         case_name,
         rank () over ( partition by external_id order by date_opened asc ) as date_rank_p,
@@ -48,30 +51,18 @@ new_providers as (
         null as n_date_opened,
         p_prod.case_id,
         p_share.parent_account_id as external_id,
-
-        {% if target.name=='dev' %}
-            '{{ var('owner_id_provder_dev') }}'
-        {% elif target.name=='qa' %}
-            '{{ var('owner_id_provder_qa') }}'
-        {% elif target.name=='prod' %}
-            '{{ var('owner_id_provder_prod') }}'
-        {% elif target.name=='test-location' %}
-            '{{ var('owner_id_provder_test_location') }}'
-        {% else %}
-            '{{ var('owner_id_provder_test') }}'
-        {% endif %}
-        as owner_id,
-        --'775d5b8c5f1147a6867dfa9ec2c6157e' as owner_id,
-
+        locs.location_id as owner_id,
         'provider' as case_type,
         p_share.bha_general_acct as case_name,
         p_share_otp.opioid_treatment_provider,
         null as update_name_action, 
         null as update_otp_action,
-        case when external_id is null then 'create' else null end as action,
+        null as update_owner_action,
+        case when p_prod.external_id is null then 'create' else null end as action,
     current_timestamp() as import_date
     from p_share left join p_prod on p_share.parent_account_id = p_prod.external_id 
                  left join p_share_otp on p_share_otp.parent_account_id = p_share.parent_account_id
+                 left join locs on locs.site_code = p_share.parent_account_id
     where action = 'create'
     order by case_name
 ), 
@@ -82,30 +73,22 @@ updated_providers as (
         p_prod.date_opened as u_date_opened,
         p_prod.case_id,
         p_prod.external_id,
-
-        {% if target.name=='dev' %}
-            '{{ var('owner_id_provder_dev') }}'
-        {% elif target.name=='qa' %}
-            '{{ var('owner_id_provder_qa') }}'
-        {% elif target.name=='prod' %}
-            '{{ var('owner_id_provder_prod') }}'
-        {% elif target.name=='test-location' %}
-            '{{ var('owner_id_provder_test_location') }}'
-        {% else %}
-            '{{ var('owner_id_provder_test') }}'
-        {% endif %}
-        as owner_id,        
-        --'775d5b8c5f1147a6867dfa9ec2c6157e' as owner_id,
-        
+        locs.location_id as owner_id,
         'provider' as case_type,
         p_share.bha_general_acct as case_name,
         iff(p_share_otp.opioid_treatment_provider = p_prod.opioid_treatment_provider, p_prod.opioid_treatment_provider,                                             p_share_otp.opioid_treatment_provider) as opioid_treatment_provider,
-        iff(p_share.parent_account_id = p_prod.external_id and p_share.bha_general_acct <> p_prod.case_name, 'update_name', null) as                               name_action,
-        iff(p_share.parent_account_id = p_prod.external_id and nvl(p_share_otp.opioid_treatment_provider::string,'') <>             nvl(p_prod.opioid_treatment_provider::string, ''), 'update_otp', null) as otp_action,
-        iff(name_action = 'update_name' or otp_action = 'update_otp', 'update', null) as action,
+        iff(p_share.parent_account_id = p_prod.external_id and 
+            p_share.bha_general_acct <> p_prod.case_name, 'update_name', null) as name_action,
+        iff(p_share.parent_account_id = p_prod.external_id and 
+            nvl(p_share_otp.opioid_treatment_provider::string,'') <> nvl(p_prod.opioid_treatment_provider::string, ''), 
+            'update_otp', null) as otp_action,
+        iff(p_share.parent_account_id = p_prod.external_id and 
+            nvl(p_prod.owner_id,'') <> nvl(locs.location_id, ''), 'update_owner', null) as owner_action,
+        iff(name_action = 'update_name' or otp_action = 'update_otp' or owner_action = 'update_owner', 'update', null) as action,
     current_timestamp() as import_date
     from p_share left join p_prod on  p_share.parent_account_id = p_prod.external_id
                  left join p_share_otp on p_share_otp.parent_account_id = p_share.parent_account_id
+                 left join locs on locs.site_code = p_share.parent_account_id
     where action like 'update' 
     order by case_name
 ),
@@ -116,13 +99,15 @@ select * from (select n_date_opened,case_id, external_id, owner_id, case_type, c
                 when TRUE then 'yes'
                 when FALSE then 'no'
                else null end as opioid_treatment_provider, 
-               update_name_action, update_otp_action, action, import_date from new_providers 
+               update_name_action, update_otp_action, update_owner_action, action, import_date 
+               from new_providers 
                union 
                select u_date_opened,case_id, external_id, owner_id, case_type, case_name,
                case opioid_treatment_provider
                 when TRUE then 'yes'
                 when FALSE then 'no'
-               else null end as opioid_treatment_provider, name_action, otp_action, action, import_date from updated_providers)
+               else null end as opioid_treatment_provider, name_action, otp_action, owner_action, action, import_date
+               from updated_providers)
 
 order by action, external_id
 )
@@ -137,6 +122,7 @@ select
 	OPIOID_TREATMENT_PROVIDER,
 	UPDATE_NAME_ACTION,
 	UPDATE_OTP_ACTION,
+    UPDATE_OWNER_ACTION,
 	ACTION,
 	IMPORT_DATE
 from final
