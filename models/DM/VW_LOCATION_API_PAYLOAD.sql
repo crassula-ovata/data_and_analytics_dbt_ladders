@@ -59,6 +59,7 @@ fac_payloads as (
         -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
         --and account_name <> 'Choice House PHP Site'
         and account_name <> '[LEGACY SITE ACCOUNT] Jefferson Center for Mental Health - Independence'
+        and account_name <> 'Jefferson Center for Mental Health - Independence'
         -- end temporary        
 ),
 fac_data_payloads as (
