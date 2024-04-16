@@ -5,7 +5,7 @@ data_and_analytics_dbt_bha_ladders:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_DEV
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
       threads: 1
       type: snowflake
@@ -15,7 +15,7 @@ data_and_analytics_dbt_bha_ladders:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_QA
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
       threads: 1
       type: snowflake
@@ -25,7 +25,7 @@ data_and_analytics_dbt_bha_ladders:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_PROD
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
       threads: 1
       type: snowflake
