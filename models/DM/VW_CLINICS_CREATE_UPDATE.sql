@@ -8,13 +8,16 @@ dm_table_data_provider as (
 hades_table_data_ladders_active_licenses as (
       select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
 ), 
+locs as (
+      select * from  {{ source('dm_table_data', 'LOCATION') }}
+),
 c_prod as (
     -- get the oldest clinic record by date_oponed for a given external_id
     -- 4/10: KC added county
     -- 5/31: KC ran this sub-select to find that the CommCare properties were not created, Anthony created this see ticket
     -- 6/1: KC checked sub-select to find that Commcare properties did not make it to Snowflake AWS, assigned to Shu to take a look
     select * from (
-        select case_id, external_id, case_name, display_name, account_name, county, address_city, address_full, 
+        select case_id, external_id, owner_id, case_name, display_name, account_name, county, address_city, address_full, 
             address_state, address_street, phone_number, phone_details, phone_display as phone_display, address_zip, clinic_type, substance_use_services, opioid_treatment_provider,
             --5/28 sprint D: BR include new fields
             original_licensure_date, 
@@ -63,7 +66,7 @@ p_prod as (
 
 c_share as ( 
     select 
-        dm.external_id_format(parent_account_id) || '#' || dm.external_id_format(account_id) as ladders_external_id,
+        dm.external_id_format(parent_account_id) || '-' || dm.external_id_format(account_id) as ladders_external_id,
         dm.external_id_format(parent_account_id) as provider_external_id,
         bha_general_acct as provider_name,
         case when provider_directory_display_name <> '' then replace(replace(replace(provider_directory_display_name, '?', '-'), char(13)), char(10))
@@ -380,25 +383,7 @@ select
         c_prod.case_id as prod_case_id, -- from prod
         c_prod.date_opened as prod_date_opened, -- from prod
         c_share.ladders_external_id,
-
-        {% if target.name=='dev' %}
-            '{{ var('owner_id_clinic_dev') }}'
-        {% elif target.name=='qa' %}
-            '{{ var('owner_id_clinic_qa') }}'
-        {% elif target.name=='prod' %}
-            '{{ var('owner_id_clinic_prod') }}'
-        {% elif target.name=='test-location' %}
-            '{{ var('owner_id_clinic_test_location') }}'
-        {% else %}
-            '{{ var('owner_id_clinic_test') }}'
-        {% endif %}
-        as owner_id,        
-        --case split_part(current_database(),'_',-1)
-        --    when 'TEST'  then '002e9d7507d140ce88872c6e6b7ed29b'
-        --    when 'DEV'  then '6fc5b9a0b5eb477f81fcd9cb0942cd12'
-        --    when 'QA' then 'a9c4c9da089b4840abbb5c4f10cbccd0'
-        --    when 'PROD'  then '29c59d3222b44ba08dda0e5c4d20b0fc' end as owner_id,
-
+        locs.location_id as owner_id,        
         'clinic' as case_type,
         'extension' as parent_relationship, 
         'provider' as parent_case_type,
@@ -748,6 +733,9 @@ select
         case
         when c_prod.external_id is not null and nvl(c_prod.map_popup, '') <> nvl(map_popup_cte.map_popup, '') then 'map_popup' else null
         end as map_popup_action,
+		case 
+		when c_prod.external_id is not null and nvl(c_prod.owner_id, '') <> nvl(locs.location_id, '') then 'owner' else null
+		end as owner_action,
         case 
         when c_prod.external_id is not null and (
                  case_name_action is not null 
@@ -820,6 +808,7 @@ select
                   map_coordinates_action  is not null -- BR 6/15
                   -- or 
                   -- map_popup_action is not null
+                  or owner_action is not null
                   ) then 'update' 
         when c_prod.external_id is null and c_share.ladders_external_id is not null then 'create'
         else null end as action,
@@ -834,6 +823,7 @@ from  c_share left join c_prod on c_prod.external_id = c_share.ladders_external_
               -- 12/1 for tile_header | 12/4 BR: commented out tile_header related
               -- left join tile_header on c_share.ladders_external_id = tile_header.ladders_external_id
               left join p_prod on p_prod.external_id = c_share.provider_external_id
+              left join locs on locs.site_code = c_share.ladders_external_id
 where action is not null 
 order by action,ladders_external_id, c_prod.date_opened, c_share.case_name
  )
@@ -993,6 +983,7 @@ order by action,ladders_external_id, c_prod.date_opened, c_share.case_name
 	LONGITUDE_ACTION,
 	MAP_COORDINATES_ACTION,
 	MAP_POPUP_ACTION,
+    OWNER_ACTION,
 	ACTION,
 	IMPORT_DATE
 from final
