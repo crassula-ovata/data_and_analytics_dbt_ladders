@@ -199,6 +199,8 @@ with payloads as (
                                         then '"gender": ' || ifnull('"' || replace(replace(replace(gender, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when account_name_action is not null or action = 'create' and account_name is not null
                                         then '"account_name": ' || ifnull('"' || replace(replace(replace(account_name, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
+                                    case when action = 'create'
+                                        then '"accepts_commcare_referrals": "yes",' else '' end  ||
                                     --12/1: SL added for tile_header
                                     --12/4: BR removed/commented out tile_header. Will be added to Unit cases instead. 
                                     -- '"tile_header": "' || replace(replace(replace(tile_header::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || ',' ||
