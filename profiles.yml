@@ -13,7 +13,7 @@ data_and_analytics_dbt_bha_ladders:
       warehouse: COMPUTE_WH
     qa:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
-      database: USER_DBT_TEST
+      database: DM_LADDERS_QA
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
       role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
