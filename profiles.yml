@@ -41,6 +41,16 @@ data_and_analytics_dbt_bha_ladders:
       type: snowflake
       user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
       warehouse: COMPUTE_WH
+    test-perf:
+      account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
+      database: DM_LADDERS_PERF
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
+      role: user_dbt_test
+      schema: DM
+      threads: 1
+      type: snowflake
+      user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
+      warehouse: COMPUTE_WH
     test:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_TEST
