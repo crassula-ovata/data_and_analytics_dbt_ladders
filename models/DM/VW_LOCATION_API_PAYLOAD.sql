@@ -1,6 +1,12 @@
 with locs as (
     select * from  {{ source('dm_table_data', 'LOCATION') }}
 ),
+case_provider as (
+    select * from  {{ source('dm_table_data', 'CASE_PROVIDER') }}
+),
+case_clinic as (
+    select * from  {{ source('dm_table_data', 'CASE_CLINIC') }}
+),
 hades_table_data_ladders_active_licenses as (
       select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
 ), 
@@ -10,6 +16,67 @@ ld as (
     ,dm.external_id_format (account_id) a_id
     from hades_table_data_ladders_active_licenses
 ),
+-- ********** REMOVE SECTION WHEN NO LONGER NEEDED **********
+prov as (
+    select distinct
+    p.external_id LOC_ID, 
+    parse_json(
+        '{' || 
+        '"name": "' || case_name || '",' ||
+        '"location_type_code": "organization",' || --provider
+        '"parent_location_id": "' || org.location_id || '",' || 
+        '"site_code": "' || LOC_ID || '"' ||
+        '}'
+    ) payload
+    from case_provider p 
+        left join ld on ld.p_id = p.external_id
+        left join locs on locs.site_code = p.external_id
+        left join locs org on org.site_code = 'facility_registry'
+    where ld.p_id is null and locs.location_id is null and loc_id is not null
+)
+,clin as (
+    select distinct
+    c.external_id LOC_ID, 
+    parse_json(
+        '{' || 
+        '"name": "' || ifnull(c.case_name, '') || '",' ||
+        '"latitude": "' || ifnull(c.latitude, '') || '",' ||
+        '"longitude": "' || ifnull(c.longitude, '') || '",' ||
+        '"location_type_code": "facility",' || --clinic
+        '"parent_location_id": "' || ifnull(locs.location_id, '') || '",' || 
+        '"site_code": "' || ifnull(LOC_ID, '') || '"' ||
+        '}'
+    ) payload
+    from case_clinic c 
+        left join ld on ld.p_id || '-' || ld.a_id = c.external_id
+        left join locs on locs.site_code = split_part(c.external_id, '-', 1)
+                and locs.location_type_code = 'organization'
+        left join locs fac on fac.site_code = c.external_id
+                and fac.location_type_code = 'facility'
+    where ld.p_id is null and fac.location_id is null 
+        and c.external_id is not null and locs.location_id is not null
+)
+,clin_data as (
+    select distinct
+    c.external_id || 'facility_data' LOC_ID, 
+    parse_json(
+        '{' || 
+        '"name": "' || regexp_replace(replace(lower(c.case_name), ' ', '_'), '[^a-z0-9|_]+', '') || '_data",' ||
+        '"location_type_code": "facility_data",' || --clinic
+        '"parent_location_id": "' || locs.location_id || '",' || 
+        '"site_code": "' || LOC_ID || '"' ||
+        '}'
+    ) payload
+    from case_clinic c 
+        left join locs on locs.site_code = c.external_id
+                and locs.location_type_code = 'facility'
+        left join locs fd on fd.site_code = c.external_id || 'facility_data'
+                and fd.location_type_code = 'facility_data'
+        left join ld on ld.p_id || '-' || ld.a_id = c.external_id
+    where ld.p_id is null and fd.location_id is null 
+        and c.external_id is not null and locs.location_id is not null
+),
+-- ********** END REMOVE SECTION **********
 org_payloads as (
     SELECT distinct
     p_id LOC_ID, 
@@ -92,6 +159,14 @@ payloads as (
     select * from fac_payloads
     union 
     select * from fac_data_payloads
+	-- ********** REMOVE SECTION WHEN NO LONGER NEEDED **********
+    union 
+    select * from prov
+    union 
+    select * from clin
+    union 
+    select * from clin_data
+	-- ********** END REMOVE SECTION **********
 ),
 numbered_payloads as ( --add row numbers and groupings of 100 at a time
     select row_number() over(order by LOC_ID asc) rownum, ceil(rownum/100) grouping, payload payloads from payloads
