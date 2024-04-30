@@ -33,6 +33,7 @@ prov as (
         left join locs on locs.site_code = p.external_id
         left join locs org on org.site_code = 'facility_registry'
     where ld.p_id is null and locs.location_id is null and loc_id is not null
+    and closed=false
 )
 ,clin as (
     select distinct
@@ -55,6 +56,7 @@ prov as (
                 and fac.location_type_code = 'facility'
     where ld.p_id is null and fac.location_id is null 
         and c.external_id is not null and locs.location_id is not null
+        and closed=false
 )
 ,clin_data as (
     select distinct
@@ -75,6 +77,7 @@ prov as (
         left join ld on ld.p_id || '-' || ld.a_id = c.external_id
     where ld.p_id is null and fd.location_id is null 
         and c.external_id is not null and locs.location_id is not null
+        and closed=false
 ),
 -- ********** END REMOVE SECTION **********
 org_payloads as (
