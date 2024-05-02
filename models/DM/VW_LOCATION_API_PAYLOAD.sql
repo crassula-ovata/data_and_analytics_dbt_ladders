@@ -41,8 +41,8 @@ prov as (
     parse_json(
         '{' || 
         '"name": "' || ifnull(c.case_name, '') || '",' ||
-        '"latitude": "' || ifnull(c.latitude, '') || '",' ||
-        '"longitude": "' || ifnull(c.longitude, '') || '",' ||
+        case when c.latitude is not null then '"latitude": "' || c.latitude || '",' else '' end || 
+        case when c.longitude is not null then '"longitude": "' || c.longitude || '",' else '' end || 
         '"location_type_code": "facility",' || --clinic
         '"parent_location_id": "' || ifnull(locs.location_id, '') || '",' || 
         '"site_code": "' || ifnull(LOC_ID, '') || '"' ||
@@ -110,8 +110,8 @@ fac_payloads as (
         '{' || 
         case when fac.location_id is not null then '"location_id": "' || fac.location_id || '",' else '' end || 
         '"name": "' || ld.account_name || '",' ||
-        '"latitude": "' || ld.latitude || '",' ||
-        '"longitude": "' || ld.longitude || '",' ||
+        case when ld.latitude is not null then '"latitude": "' || ld.latitude || '",' else '' end || 
+        case when ld.longitude is not null then '"longitude": "' || ld.longitude || '",' else '' end || 
         '"location_type_code": "facility",' || --clinic
         '"parent_location_id": "' || locs.location_id || '",' || 
         '"site_code": "' || LOC_ID || '"' ||
@@ -130,6 +130,7 @@ fac_payloads as (
         --and account_name <> 'Choice House PHP Site'
         and account_name <> '[LEGACY SITE ACCOUNT] Jefferson Center for Mental Health - Independence'
         and account_name <> 'Jefferson Center for Mental Health - Independence'
+        and account_name <> 'Atlas Counseling & Consulting, PLLC'
         -- end temporary        
 ),
 fac_data_payloads as (
