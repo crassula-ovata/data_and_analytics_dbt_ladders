@@ -98,10 +98,6 @@ org_payloads as (
                 org.site_code = p_id
     where (org.location_id is null or (org.name != ld.BHA_GENERAL_ACCT or locs.location_id != org.parent_location_id))
         and locs.location_id is not null
-        -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
-        and ld.bha_general_acct <> '[LEGACY ACCOUNT] Colorado Mental Health Institute - General Account'
-        and ld.bha_general_acct <> '[LEGACY SITE ACCOUNT] Jefferson Center for Mental Health - Independence'
-        -- end temporary        
 ),
 fac_payloads as (
     SELECT distinct
@@ -127,9 +123,6 @@ fac_payloads as (
             or fac.latitude::number(10,7) != ld.latitude::number(10,7) or fac.longitude::number(10,7) != ld.longitude::number(10,7)))
         and locs.location_id is not null
         -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
-        --and account_name <> 'Choice House PHP Site'
-        and account_name <> '[LEGACY SITE ACCOUNT] Jefferson Center for Mental Health - Independence'
-        and account_name <> 'Jefferson Center for Mental Health - Independence'
         and account_name <> 'Atlas Counseling & Consulting, PLLC'
         -- end temporary        
 ),
@@ -152,10 +145,6 @@ fac_data_payloads as (
                 and fd.location_type_code = 'facility_data'
     where (fd.location_id is null or (fd.name != regexp_replace(replace(lower(ld.account_name), ' ', '_'), '[^a-z0-9|_]+', '') || '_data' or locs.location_id != fd.parent_location_id))
         and locs.location_id is not null
-        -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
-        and ld.account_name <> '[LEGACY ACCOUNT] Colorado Mental Health Institute - General Account'
-        and ld.account_name <> '[LEGACY SITE ACCOUNT] Jefferson Center for Mental Health - Independence'
-        -- end temporary
 ),
 payloads as (
     select * from org_payloads
