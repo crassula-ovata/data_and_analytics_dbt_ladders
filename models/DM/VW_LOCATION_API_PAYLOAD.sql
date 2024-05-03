@@ -14,6 +14,13 @@ ld as (
     select * 
     ,dm.external_id_format (parent_account_id) p_id
     ,dm.external_id_format (account_id) a_id
+    ,
+    case when provider_directory_display_name <> '' 
+            then replace(replace(replace(provider_directory_display_name, '?', '-'), char(13)), char(10))
+         when program_name <>'' 
+            then replace(replace(replace(program_name, '?', '-'), char(13)), char(10))
+         else account_name
+    end as new_provider_directory_display_name    
     from hades_table_data_ladders_active_licenses
 ),
 -- ********** REMOVE SECTION WHEN NO LONGER NEEDED **********
@@ -105,7 +112,7 @@ fac_payloads as (
     parse_json(
         '{' || 
         case when fac.location_id is not null then '"location_id": "' || fac.location_id || '",' else '' end || 
-        '"name": "' || ld.account_name || '",' ||
+        '"name": "' || ld.new_provider_directory_display_name || '",' ||
         case when ld.latitude is not null then '"latitude": "' || ld.latitude || '",' else '' end || 
         case when ld.longitude is not null then '"longitude": "' || ld.longitude || '",' else '' end || 
         '"location_type_code": "facility",' || --clinic
@@ -119,7 +126,7 @@ fac_payloads as (
         -- changed by slu - facility site_code: parent_account_id, "#", account_id
         left join locs fac on fac.site_code = p_id || '-' || a_id
                 and fac.location_type_code = 'facility'
-    where (fac.location_id is null or (fac.name != ld.account_name or locs.location_id != fac.parent_location_id
+    where (fac.location_id is null or (fac.name != ld.new_provider_directory_display_name or locs.location_id != fac.parent_location_id
             or fac.latitude::number(10,7) != ld.latitude::number(10,7) or fac.longitude::number(10,7) != ld.longitude::number(10,7)))
         and locs.location_id is not null
         -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
@@ -132,7 +139,7 @@ fac_data_payloads as (
     parse_json(
         '{' || 
         case when fd.location_id is not null then '"location_id": "' || fd.location_id || '",' else '' end || 
-        '"name": "' || regexp_replace(replace(lower(ld.account_name), ' ', '_'), '[^a-z0-9|_]+', '') || '_data",' ||
+        '"name": "' || regexp_replace(replace(lower(ld.new_provider_directory_display_name), ' ', '_'), '[^a-z0-9|_]+', '') || '_data",' ||
         '"location_type_code": "facility_data",' || --clinic
         '"parent_location_id": "' || locs.location_id || '",' || 
         '"site_code": "' || LOC_ID || '"' ||
@@ -143,7 +150,7 @@ fac_data_payloads as (
                 and locs.location_type_code = 'facility'
         left join locs fd on fd.site_code = p_id || '-' || a_id || 'facility_data'
                 and fd.location_type_code = 'facility_data'
-    where (fd.location_id is null or (fd.name != regexp_replace(replace(lower(ld.account_name), ' ', '_'), '[^a-z0-9|_]+', '') || '_data' or locs.location_id != fd.parent_location_id))
+    where (fd.location_id is null or (fd.name != regexp_replace(replace(lower(ld.new_provider_directory_display_name), ' ', '_'), '[^a-z0-9|_]+', '') || '_data' or locs.location_id != fd.parent_location_id))
         and locs.location_id is not null
 ),
 payloads as (
