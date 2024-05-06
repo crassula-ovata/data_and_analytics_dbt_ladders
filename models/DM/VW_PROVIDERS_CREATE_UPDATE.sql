@@ -44,8 +44,27 @@ p_prod as (
         
      from dm_table_data_provider p1 where closed = 'FALSE' and external_id is not null) where date_rank_p = 1 
 ),
-
-new_providers as (
+-- 05/06/2024 p_share_union and p_share_union_otp will be used for additional data check between p_share and p_prod (with p_share is the primary data source)
+-- that if a case is not synced between p_share and p_prod, data will be retained between these two data sources
+p_share_union as (
+	select * 
+	from (
+		select parent_account_id, bha_general_acct, 1 as priority from p_share
+		union
+		select external_id parent_account_id, case_name bha_general_acct, 2 as priority from p_prod
+	)
+	qualify row_number() over (partition by parent_account_id order by priority asc) = 1
+)
+,p_share_union_otp as (
+    select *
+    from (
+        select parent_account_id, opioid_treatment_provider, 1 as priority from p_share_otp
+        union
+        select external_id parent_account_id, opioid_treatment_provider, 2 as priority from p_prod
+    )
+    qualify row_number() over (partition by parent_account_id order by priority asc) = 1
+)
+,new_providers as (
 
     select 
         null as n_date_opened,
@@ -75,20 +94,20 @@ updated_providers as (
         p_prod.external_id,
         locs.location_id as owner_id,
         'provider' as case_type,
-        p_share.bha_general_acct as case_name,
-        iff(p_share_otp.opioid_treatment_provider = p_prod.opioid_treatment_provider, p_prod.opioid_treatment_provider,                                             p_share_otp.opioid_treatment_provider) as opioid_treatment_provider,
-        iff(p_share.parent_account_id = p_prod.external_id and 
-            p_share.bha_general_acct <> p_prod.case_name, 'update_name', null) as name_action,
-        iff(p_share.parent_account_id = p_prod.external_id and 
-            nvl(p_share_otp.opioid_treatment_provider::string,'') <> nvl(p_prod.opioid_treatment_provider::string, ''), 
+        p_share_union.bha_general_acct as case_name,
+        iff(p_share_union_otp.opioid_treatment_provider = p_prod.opioid_treatment_provider, p_prod.opioid_treatment_provider,                                             p_share_union_otp.opioid_treatment_provider) as opioid_treatment_provider,
+        iff(p_share_union.parent_account_id = p_prod.external_id and 
+            p_share_union.bha_general_acct <> p_prod.case_name, 'update_name', null) as name_action,
+        iff(p_share_union.parent_account_id = p_prod.external_id and 
+            nvl(p_share_union_otp.opioid_treatment_provider::string,'') <> nvl(p_prod.opioid_treatment_provider::string, ''), 
             'update_otp', null) as otp_action,
-        iff(p_share.parent_account_id = p_prod.external_id and 
+        iff(p_share_union.parent_account_id = p_prod.external_id and 
             nvl(p_prod.owner_id,'') <> nvl(locs.location_id, ''), 'update_owner', null) as owner_action,
         iff(name_action = 'update_name' or otp_action = 'update_otp' or owner_action = 'update_owner', 'update', null) as action,
     current_timestamp() as import_date
-    from p_share left join p_prod on  p_share.parent_account_id = p_prod.external_id
-                 left join p_share_otp on p_share_otp.parent_account_id = p_share.parent_account_id
-                 left join locs on locs.site_code = p_share.parent_account_id
+    from p_share_union left join p_prod on  p_share_union.parent_account_id = p_prod.external_id
+                 left join p_share_union_otp on p_share_union_otp.parent_account_id = p_share_union.parent_account_id
+                 left join locs on locs.site_code = p_share_union.parent_account_id
     where action like 'update' 
     order by case_name
 ),
