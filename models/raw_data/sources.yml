@@ -8,6 +8,7 @@ sources:
       {%- elif target.name=="qa" -%} DM_LADDERS_QA
       {%- elif target.name=="prod" -%} DM_LADDERS_PROD
       {%- elif target.name=="test-location" -%} DM_LADDERS_BHA_LOCATION_REDESIGN_1
+      {%- elif target.name=="test-perf" -%} DM_LADDERS_PERF
       {%- elif target.name=="test" -%} DM_LADDERS_TEST
       {%- else -%} invalid_database
       {%- endif -%}    
@@ -25,6 +26,7 @@ sources:
       {%- elif target.name=="qa" -%} DM_CO_CARE_COORD_QA
       {%- elif target.name=="prod" -%} DM_CO_CARE_COORD_PROD
       {%- elif target.name=="test-location" -%} DM_BHA_LOCATION_REDESIGN_1
+      {%- elif target.name=="test-perf" -%} DM_CO_CARE_COORD_PERF
       {%- elif target.name=="test" -%} DM_CO_CARE_COORD_TEST
       {%- else -%} invalid_database
       {%- endif -%}  
