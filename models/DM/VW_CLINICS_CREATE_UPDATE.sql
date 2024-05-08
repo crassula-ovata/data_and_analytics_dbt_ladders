@@ -11,56 +11,60 @@ hades_table_data_ladders_active_licenses as (
 locs as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
 ),
-c_prod_all as (
-	select case_id, external_id, owner_id, case_name, display_name, account_name, county, address_city, address_full, 
-		address_state, address_street, phone_number, phone_details, phone_display as phone_display, address_zip, clinic_type, substance_use_services, opioid_treatment_provider,
-		--5/28 sprint D: BR include new fields
-		original_licensure_date, 
-		rsso_license_number, offers_telehealth, fax_number, tdd_tty, provider_location_display_label,  website, npi,
-		monday_hours, tuesday_hours, wednesday_hours, thursday_hours, friday_hours, saturday_hours, sunday_hours, hide_address,
-		-- circle_program, 
-		case when circle_program = 'TRUE' then 'yes' 
-			when circle_program = 'FALSE' then 'no' 
-			else null end as circle_program,
-		mso_affiliation, rae, aso, 
-		provider_directory_form_modified_date, 
-		-- acceptingƒ_new_patients,
-		case when accepting_new_patients = TRUE then 'yes' else null end as accepting_new_patients,
-		telehealth_restrictions, service_types,
-		sud_license_number, cs_license_number,
-		mh_designation, 
-		accessibility,
-		population_served, 
-		gender,
-		insurance, language_services, monday_open, monday_close, tuesday_open, tuesday_close,
-		wednesday_open, wednesday_close, thursday_open, thursday_close, friday_open, friday_close, saturday_open, saturday_close,
-		sunday_open, sunday_close, mental_health_settings,
-		residential_services, latitude,longitude,
-		 -- 6/15 BR updates to include map_coordintes
-		 map_coordinates,
-		-- KC: end of new properties.
-		-- 8/20/23 additional 2 fields for map_popup
-		referral_type,
-		map_popup,
-		-- 12/1 for tile_header | 12/4 BR: commented out tile_header related
-		-- exclusions,
-		date_opened, parent_case_id, parent_case_type, parent_relationship, ACTIVE_SUD_LICENSE, ACTIVE_MH_DESIGNATION,
-		rank () over ( partition by external_id order by date_opened asc ) as date_rank_c 
-	from dm_table_data_clinic where closed = 'FALSE'
-)
-, c_prod as (
-    select * from c_prod_all
+c_prod as (
+    -- get the oldest clinic record by date_oponed for a given external_id
+    -- 4/10: KC added county
+    -- 5/31: KC ran this sub-select to find that the CommCare properties were not created, Anthony created this see ticket
+    -- 6/1: KC checked sub-select to find that Commcare properties did not make it to Snowflake AWS, assigned to Shu to take a look
+    select * from (
+        select case_id, external_id, owner_id, case_name, display_name, account_name, county, address_city, address_full, 
+            address_state, address_street, phone_number, phone_details, phone_display as phone_display, address_zip, clinic_type, substance_use_services, opioid_treatment_provider,
+            --5/28 sprint D: BR include new fields
+            original_licensure_date, 
+            rsso_license_number, offers_telehealth, fax_number, tdd_tty, provider_location_display_label,  website, npi,
+            monday_hours, tuesday_hours, wednesday_hours, thursday_hours, friday_hours, saturday_hours, sunday_hours, hide_address,
+            -- circle_program, 
+            case when circle_program = 'TRUE' then 'yes' 
+                when circle_program = 'FALSE' then 'no' 
+                else null end as circle_program,
+            mso_affiliation, rae, aso, 
+            provider_directory_form_modified_date, 
+            -- acceptingƒ_new_patients,
+            case when accepting_new_patients = TRUE then 'yes' else null end as accepting_new_patients,
+            telehealth_restrictions, service_types,
+            sud_license_number, cs_license_number,
+            mh_designation, 
+            accessibility,
+            population_served, 
+            gender,
+            insurance, language_services, monday_open, monday_close, tuesday_open, tuesday_close,
+            wednesday_open, wednesday_close, thursday_open, thursday_close, friday_open, friday_close, saturday_open, saturday_close,
+            sunday_open, sunday_close, mental_health_settings,
+            residential_services, latitude,longitude,
+             -- 6/15 BR updates to include map_coordintes
+             map_coordinates,
+            -- KC: end of new properties.
+            -- 8/20/23 additional 2 fields for map_popup
+            referral_type,
+            map_popup,
+            -- 12/1 for tile_header | 12/4 BR: commented out tile_header related
+            -- exclusions,
+            date_opened, parent_case_id, parent_case_type, parent_relationship, ACTIVE_SUD_LICENSE, ACTIVE_MH_DESIGNATION,
+            rank () over ( partition by external_id order by date_opened asc ) as date_rank_c 
+        from dm_table_data_clinic where closed = 'FALSE') 
     where date_rank_c = 1
-)
-, p_prod as (
+    
+),
+p_prod as (
      -- per woody and kirti, get the oldest provider record by date_opened for given external_id
      select * from (
          select case_id, external_id, date_opened, 
             rank () over ( partition by external_id order by date_opened asc ) as date_rank_p        
          from dm_table_data_provider p1 where closed = 'FALSE' and external_id is not null) 
      where date_rank_p = 1 
-)
-, c_share as ( 
+),
+
+c_share as ( 
     select 
         dm.external_id_format(parent_account_id) || '-' || dm.external_id_format(account_id) as ladders_external_id,
         dm.external_id_format(parent_account_id) as provider_external_id,
@@ -296,8 +300,9 @@ c_prod_all as (
         
     from hades_table_data_ladders_active_licenses 
     order by case_name
-)
-, clinic_type_list as (
+), 
+
+clinic_type_list as (
     select 
         ladders_external_id, 
         case 
@@ -330,9 +335,9 @@ c_prod_all as (
              when (OUTPATIENT_SU_SERVICES is not null or INTENSIVE_OUTPATIENT_SU_SERVICES is not null or substance_use_services is not null) then 'substance_use_services' 
              else null  end as substance_use_services
     from c_share 
-    order by ladders_external_id
-)
-, clinic_type as (
+    order by ladders_external_id),
+
+clinic_type as (
    select ladders_external_id, listagg (services, ' ') WITHIN GROUP(order by services) as clinic_type 
    from 
    (
@@ -346,163 +351,160 @@ c_prod_all as (
  
                     )
     ) group by ladders_external_id order by ladders_external_id desc
-)
-, service_types_list as (
+),
+
+service_types_list as (
     select ladders_external_id, 
         case when ACTIVE_SUD_LICENSE = 'TRUE' then 'substance_use' else null end as substance_use,
         case when ACTIVE_MH_DESIGNATION = 'TRUE' then 'mental_health' else null end as mental_health,
         case when ACTIVE_RSSO_LICENSE = 'TRUE' then 'recovery_support_services_organization' else null end as recovery_support_services_organization
     from c_share 
     order by ladders_external_id
+),
+
+service_types as (
+select ladders_external_id, listagg (services, ' ') WITHIN GROUP(order by services) as service_types 
+   from 
+   (
+       select ladders_external_id, services 
+       from service_types_list
+            unpivot (services for column_list in (substance_use,mental_health, recovery_support_services_organization))
+    ) group by ladders_external_id order by ladders_external_id desc
+), 
+map_popup_cte as (
+select ladders_external_id, c_share.display_name, c_share.phone_display, c_share.address_full, c_share.insurance, c_prod.referral_type,
+dm.get_map_popup(c_share.display_name, c_share.phone_display, c_share.address_full, c_share.insurance, c_prod.referral_type) as map_popup
+ from  c_share join c_prod on c_share.ladders_external_id = c_prod.external_id
+    order by ladders_external_id
 )
-, service_types as (
-	select ladders_external_id, listagg (services, ' ') WITHIN GROUP(order by services) as service_types 
-	from 
-	(
-	   select ladders_external_id, services 
-	   from service_types_list
-			unpivot (services for column_list in (substance_use,mental_health, recovery_support_services_organization))
-	) group by ladders_external_id order by ladders_external_id desc
-)
-, map_popup_cte as (
-	select ladders_external_id, c_share.display_name, c_share.phone_display, c_share.address_full, c_share.insurance, c_prod.referral_type,
-	dm.get_map_popup(c_share.display_name, c_share.phone_display, c_share.address_full, c_share.insurance, c_prod.referral_type) as map_popup
-	from  c_share join c_prod on c_share.ladders_external_id = c_prod.external_id
-	order by ladders_external_id
-)
-, c_prod_prep as (
+-- 05/06/2024 c_prod_prep (along with c_share_union) will be used for additional data check between c_share and c_prod (with c_share is the primary data source)
+-- that if a case is not synced between c_share and c_prod, data will be retained between these two data sources
+,c_prod_prep as (
 	select 
-		EXTERNAL_ID as LADDERS_EXTERNAL_ID
-		,split_part(EXTERNAL_ID, '-', 1) as PROVIDER_EXTERNAL_ID
-		,null as PROVIDER_NAME
-		, CASE_NAME
-		, DISPLAY_NAME
-		,DISPLAY_NAME as ACCOUNT_NAME
-		, COUNTY
-		, ADDRESS_CITY
-		, ADDRESS_FULL
-		, ADDRESS_STATE
-		, ADDRESS_STREET
-		, ADDRESS_ZIP
-		,PHONE_NUMBER as PHONE
-		, PHONE_DETAILS
-		, PHONE_NUMBER
-		, PHONE_DISPLAY
-		, OPIOID_TREATMENT_PROVIDER
-		,null as RESIDENTIAL_CHILD_CARE_FACILITY
-		,null as HOSPITAL
-		,null as COMMUNITY_MENTAL_HEALTH_CENTER
-		,null as COMMUNITY_MENTAL_HEALTH_CLINIC
-		, SUBSTANCE_USE_SERVICES
-		, RESIDENTIAL_SERVICES
-		,null as OUTPATIENT_SU_SERVICES
-		,null as INTENSIVE_OUTPATIENT_SU_SERVICES
-		,null as CLINIC_MANAGED_LOW_INTENSE_RES_SVCS
-		,null as CLINIC_MANAGED_MED_INTENSE_RES_SVCS
-		,null as CLINIC_MANAGED_HIGH_INTENSE_RES_SVCS
-		,null as MEDICALLY_MONITORED_INTENSE_RES_TRTMT
-		,null as CLINIC_MANAGED_RESIDENTIAL_DETOX
-		,null as MED_MONITORED_INPATIENT_DETOX
-		, ORIGINAL_LICENSURE_DATE
-		, SUD_LICENSE_NUMBER
-		, CS_LICENSE_NUMBER
-		, MH_DESIGNATION
-		, RSSO_LICENSE_NUMBER
-		, OFFERS_TELEHEALTH
-		, FAX_NUMBER
-		, TDD_TTY
-		, HIDE_ADDRESS
-		, PROVIDER_LOCATION_DISPLAY_LABEL
-		, WEBSITE
-		, POPULATION_SERVED
-		, GENDER
-		, ACCESSIBILITY
-		, INSURANCE
-		, LANGUAGE_SERVICES
-		, NPI
-		, MONDAY_HOURS
-		, MONDAY_OPEN
-		, MONDAY_CLOSE
-		, TUESDAY_HOURS
-		, TUESDAY_OPEN
-		, TUESDAY_CLOSE
-		, WEDNESDAY_HOURS
-		, WEDNESDAY_OPEN
-		, WEDNESDAY_CLOSE
-		, THURSDAY_HOURS
-		, THURSDAY_OPEN
-		, THURSDAY_CLOSE
-		, FRIDAY_HOURS
-		, FRIDAY_OPEN
-		, FRIDAY_CLOSE
-		, SATURDAY_HOURS
-		, SATURDAY_OPEN
-		, SATURDAY_CLOSE
-		, SUNDAY_HOURS
-		, SUNDAY_OPEN
-		, SUNDAY_CLOSE
-		, CIRCLE_PROGRAM
-		, MSO_AFFILIATION
-		, RAE
-		, ASO
-		, PROVIDER_DIRECTORY_FORM_MODIFIED_DATE
-		, ACCEPTING_NEW_PATIENTS
-		, TELEHEALTH_RESTRICTIONS
-		, LATITUDE
-		, LONGITUDE
-		, MAP_COORDINATES
-		, MENTAL_HEALTH_SETTINGS
-		,null as PSYCHIATRIC_RESIDENTIAL
-		,null as TREATMENT_EVALUATION_72_HOUR
-		,null as ACUTE_TREATMENT_UNIT
-		,null as CRISIS_STABILIZATION_UNIT
-		,null as DAY_TREATMENT
-		,null as EMERGENCY
-		,null as INTENSIVE_OUTPATIENT
-		,null as OUTPATIENT
-		,null as RESIDENTIAL_SHORT_TERM_TREATMENT
-		,null as RESIDENTIAL_LONG_TERM_TREATMENT
-		,null as EDU_TTMT_SVCS_FOR_PERSONS_IN_CJS
-		,null as GENDER_RESPONSIVE_TTMT_FOR_WOMEN
-		,null as YOUTH_TREATMENT
-		,null as DUI_DWI
-		,null as GENERAL_TREATMENT
-		,null as RSSO_SERVICES_PROVIDED
-		,null as ALCOHOL_DRUG_INVOLUNTARY_COMMITMENT
-		, ACTIVE_SUD_LICENSE
-		, ACTIVE_MH_DESIGNATION
-		,null as ACTIVE_RSSO_LICENSE
-        ,case_id as temp_case_id
-        ,date_opened
-        ,2 as priority
-        ,date_rank_c
-	from c_prod_all
+	EXTERNAL_ID as LADDERS_EXTERNAL_ID
+	,split_part(EXTERNAL_ID, '-', 1) as PROVIDER_EXTERNAL_ID
+	,null as PROVIDER_NAME
+	, CASE_NAME
+	, DISPLAY_NAME
+	,DISPLAY_NAME as ACCOUNT_NAME
+	, COUNTY
+	, ADDRESS_CITY
+	, ADDRESS_FULL
+	, ADDRESS_STATE
+	, ADDRESS_STREET
+	, ADDRESS_ZIP
+	,PHONE_NUMBER as PHONE
+	, PHONE_DETAILS
+	, PHONE_NUMBER
+	, PHONE_DISPLAY
+	, OPIOID_TREATMENT_PROVIDER
+	,null as RESIDENTIAL_CHILD_CARE_FACILITY
+	,null as HOSPITAL
+	,null as COMMUNITY_MENTAL_HEALTH_CENTER
+	,null as COMMUNITY_MENTAL_HEALTH_CLINIC
+	, SUBSTANCE_USE_SERVICES
+	, RESIDENTIAL_SERVICES
+	,null as OUTPATIENT_SU_SERVICES
+	,null as INTENSIVE_OUTPATIENT_SU_SERVICES
+	,null as CLINIC_MANAGED_LOW_INTENSE_RES_SVCS
+	,null as CLINIC_MANAGED_MED_INTENSE_RES_SVCS
+	,null as CLINIC_MANAGED_HIGH_INTENSE_RES_SVCS
+	,null as MEDICALLY_MONITORED_INTENSE_RES_TRTMT
+	,null as CLINIC_MANAGED_RESIDENTIAL_DETOX
+	,null as MED_MONITORED_INPATIENT_DETOX
+	, ORIGINAL_LICENSURE_DATE
+	, SUD_LICENSE_NUMBER
+	, CS_LICENSE_NUMBER
+	, MH_DESIGNATION
+	, RSSO_LICENSE_NUMBER
+	, OFFERS_TELEHEALTH
+	, FAX_NUMBER
+	, TDD_TTY
+	, HIDE_ADDRESS
+	, PROVIDER_LOCATION_DISPLAY_LABEL
+	, WEBSITE
+	, POPULATION_SERVED
+	, GENDER
+	, ACCESSIBILITY
+	, INSURANCE
+	, LANGUAGE_SERVICES
+	, NPI
+	, MONDAY_HOURS
+	, MONDAY_OPEN
+	, MONDAY_CLOSE
+	, TUESDAY_HOURS
+	, TUESDAY_OPEN
+	, TUESDAY_CLOSE
+	, WEDNESDAY_HOURS
+	, WEDNESDAY_OPEN
+	, WEDNESDAY_CLOSE
+	, THURSDAY_HOURS
+	, THURSDAY_OPEN
+	, THURSDAY_CLOSE
+	, FRIDAY_HOURS
+	, FRIDAY_OPEN
+	, FRIDAY_CLOSE
+	, SATURDAY_HOURS
+	, SATURDAY_OPEN
+	, SATURDAY_CLOSE
+	, SUNDAY_HOURS
+	, SUNDAY_OPEN
+	, SUNDAY_CLOSE
+	, CIRCLE_PROGRAM
+	, MSO_AFFILIATION
+	, RAE
+	, ASO
+	, PROVIDER_DIRECTORY_FORM_MODIFIED_DATE
+	, ACCEPTING_NEW_PATIENTS
+	, TELEHEALTH_RESTRICTIONS
+	, LATITUDE
+	, LONGITUDE
+	, MAP_COORDINATES
+	, MENTAL_HEALTH_SETTINGS
+	,null as PSYCHIATRIC_RESIDENTIAL
+	,null as TREATMENT_EVALUATION_72_HOUR
+	,null as ACUTE_TREATMENT_UNIT
+	,null as CRISIS_STABILIZATION_UNIT
+	,null as DAY_TREATMENT
+	,null as EMERGENCY
+	,null as INTENSIVE_OUTPATIENT
+	,null as OUTPATIENT
+	,null as RESIDENTIAL_SHORT_TERM_TREATMENT
+	,null as RESIDENTIAL_LONG_TERM_TREATMENT
+	,null as EDU_TTMT_SVCS_FOR_PERSONS_IN_CJS
+	,null as GENDER_RESPONSIVE_TTMT_FOR_WOMEN
+	,null as YOUTH_TREATMENT
+	,null as DUI_DWI
+	,null as GENERAL_TREATMENT
+	,null as RSSO_SERVICES_PROVIDED
+	,null as ALCOHOL_DRUG_INVOLUNTARY_COMMITMENT
+	, ACTIVE_SUD_LICENSE
+	, ACTIVE_MH_DESIGNATION
+	,null as ACTIVE_RSSO_LICENSE
+	from c_prod
 )
 , c_share_union as (
-	select *, 
-        last_value(temp_case_id) over(partition by LADDERS_EXTERNAL_ID order by temp_case_id asc nulls first) case_id
+	select *
 	from (
-		select * exclude date_rank_c from c_prod_prep where date_rank_c = 1
-        union
-		select *,null as temp_case_id, null as date_opened, 1 as priority from c_share
+		select *, 1 as priority from c_share
+		union
+		select *, 2 as priority from c_prod_prep
 	)
 	qualify row_number() over (partition by LADDERS_EXTERNAL_ID order by priority asc) = 1
-    union
-    select * exclude date_rank_c, temp_case_id case_id from c_prod_prep where date_rank_c <> 1
 )
 , final as (
-	select
-        coalesce(c_share_union.LADDERS_EXTERNAL_ID, c_prod_all.external_id) as prod_external_id,   -- from prod
-        coalesce(c_share_union.case_id, c_prod_all.case_id) as prod_case_id, -- from prod
-        coalesce(c_share_union.date_opened, c_prod_all.date_opened) as prod_date_opened, -- from prod
+select
+        c_prod.external_id as prod_external_id,   -- from prod
+        c_prod.case_id as prod_case_id, -- from prod
+        c_prod.date_opened as prod_date_opened, -- from prod
         c_share_union.ladders_external_id,
         locs.location_id as owner_id,        
         'clinic' as case_type,
         'extension' as parent_relationship, 
         'provider' as parent_case_type,
         case 
-            when c_prod_all.parent_case_id is not null then c_prod_all.parent_case_id
-            when c_prod_all.parent_case_id is null and p_prod.case_id is not null then p_prod.case_id
+            when c_prod.parent_case_id is not null then c_prod.parent_case_id
+            when c_prod.parent_case_id is null and p_prod.case_id is not null then p_prod.case_id
             else null 
             end as parent_case_id,            
         c_share_union.provider_external_id,
@@ -635,47 +637,47 @@ c_prod_all as (
        
         --update checks
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.case_name, '') <> nvl(c_share_union.case_name, '') then 'update_case_name' else null
+            when c_prod.external_id is not null and nvl(c_prod.case_name, '') <> nvl(c_share_union.case_name, '') then 'update_case_name' else null
         end as case_name_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.display_name, '') <> nvl(c_share_union.display_name, '') then 'update_display_name' else null
+            when c_prod.external_id is not null and nvl(c_prod.display_name, '') <> nvl(c_share_union.display_name, '') then 'update_display_name' else null
         end as display_name_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.account_name, '') <> nvl(c_share_union.account_name, '') then 'update_account_name' else null
+            when c_prod.external_id is not null and nvl(c_prod.account_name, '') <> nvl(c_share_union.account_name, '') then 'update_account_name' else null
         end as account_name_action,
         -- 4/10: Added county check
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.county, '') <> nvl(c_share_union.county, '') then 'update_county' else null
+            when c_prod.external_id is not null and nvl(c_prod.county, '') <> nvl(c_share_union.county, '') then 'update_county' else null
         end as county_action,        
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.address_city, '') <> nvl(c_share_union.address_city, '') then 'update_address_city' else null
+            when c_prod.external_id is not null and nvl(c_prod.address_city, '') <> nvl(c_share_union.address_city, '') then 'update_address_city' else null
         end as address_city_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.address_full, '') <> nvl(c_share_union.address_full, '') then 'update_address_full' else null
+            when c_prod.external_id is not null and nvl(c_prod.address_full, '') <> nvl(c_share_union.address_full, '') then 'update_address_full' else null
         end as address_full_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.address_state, '') <> nvl(c_share_union.address_state, '') then 'update_address_state' else null
+            when c_prod.external_id is not null and nvl(c_prod.address_state, '') <> nvl(c_share_union.address_state, '') then 'update_address_state' else null
         end as address_state_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.address_street, '') <> nvl(c_share_union.address_street, '') then 'update_address_street' else null
+            when c_prod.external_id is not null and nvl(c_prod.address_street, '') <> nvl(c_share_union.address_street, '') then 'update_address_street' else null
         end as address_street_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.address_zip, '') <> nvl(c_share_union.address_zip, '') then 'update_address_zip' else null
+            when c_prod.external_id is not null and nvl(c_prod.address_zip, '') <> nvl(c_share_union.address_zip, '') then 'update_address_zip' else null
         end as address_zip_action,
         case
-            when c_prod_all.external_id is not null and nvl(trim(c_prod_all.clinic_type), '') <> nvl(clinic_type.clinic_type, '') then 'update_clinic_type' else null
+            when c_prod.external_id is not null and nvl(trim(c_prod.clinic_type), '') <> nvl(clinic_type.clinic_type, '') then 'update_clinic_type' else null
         end as clinic_type_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.phone_number::string, '') <> nvl(c_share_union.phone::string, '') then 'update_phone_number' else null
+            when c_prod.external_id is not null and nvl(c_prod.phone_number::string, '') <> nvl(c_share_union.phone::string, '') then 'update_phone_number' else null
         end as phone_number_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.phone_details, '') <> nvl(c_share_union.phone_details , '') then 'update_phone_details' else null
+            when c_prod.external_id is not null and nvl(c_prod.phone_details, '') <> nvl(c_share_union.phone_details , '') then 'update_phone_details' else null
         end as phone_details_action,
         case
-            when c_prod_all.external_id is not null and nvl(c_prod_all.phone_display, '') <> nvl(c_share_union.phone_display , '') then 'update_phone_display' else null
+            when c_prod.external_id is not null and nvl(c_prod.phone_display, '') <> nvl(c_share_union.phone_display , '') then 'update_phone_display' else null
         end as phone_display_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.opioid_treatment_provider::string, '') <> nvl(c_share_union.opioid_treatment_provider::string, '') 
+        when c_prod.external_id is not null and nvl(c_prod.opioid_treatment_provider::string, '') <> nvl(c_share_union.opioid_treatment_provider::string, '') 
                 then 'update_opioid_treatment_provider' else null
         end as opioid_treatment_provider_action,
       
@@ -683,174 +685,174 @@ c_prod_all as (
         --5/28 sprint D: BR include new fields
         case
         -- 6/6 BR updated to wrap in varchar and check with nvl. 
-        when c_prod_all.external_id is not null and nvl(to_varchar(c_prod_all.original_licensure_date), '') <> nvl(to_varchar(c_share_union.original_licensure_date), '') then 'original_licensure_date' else null
+        when c_prod.external_id is not null and nvl(to_varchar(c_prod.original_licensure_date), '') <> nvl(to_varchar(c_share_union.original_licensure_date), '') then 'original_licensure_date' else null
         end as original_licensure_date_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.sud_license_number, '') <> nvl(c_share_union.sud_license_number, '') then 'sud_license_number' else null
+        when c_prod.external_id is not null and nvl(c_prod.sud_license_number, '') <> nvl(c_share_union.sud_license_number, '') then 'sud_license_number' else null
         end as sud_license_number_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.cs_license_number, '') <> nvl(c_share_union.cs_license_number, '') then 'cs_license_number' else null
+        when c_prod.external_id is not null and nvl(c_prod.cs_license_number, '') <> nvl(c_share_union.cs_license_number, '') then 'cs_license_number' else null
         end as cs_license_number_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.mh_designation, '') <> nvl(c_share_union.mh_designation, '') then 'mh_designation' else null
+        when c_prod.external_id is not null and nvl(c_prod.mh_designation, '') <> nvl(c_share_union.mh_designation, '') then 'mh_designation' else null
         end as mh_designation_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.rsso_license_number, '') <> nvl(c_share_union.rsso_license_number, '') then 'rsso_license_number' else null
+        when c_prod.external_id is not null and nvl(c_prod.rsso_license_number, '') <> nvl(c_share_union.rsso_license_number, '') then 'rsso_license_number' else null
         end as rsso_license_number_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.offers_telehealth::string, '') <> nvl(c_share_union.offers_telehealth::string, '') then 'offers_telehealth' else null
-        -- when c_prod_all.external_id is not null and try_to_boolean(c_prod_all.offers_telehealth) <> try_to_boolean(c_share_union.offers_telehealth) then 'offers_telehealth' else null
+        when c_prod.external_id is not null and nvl(c_prod.offers_telehealth::string, '') <> nvl(c_share_union.offers_telehealth::string, '') then 'offers_telehealth' else null
+        -- when c_prod.external_id is not null and try_to_boolean(c_prod.offers_telehealth) <> try_to_boolean(c_share_union.offers_telehealth) then 'offers_telehealth' else null
         end as offers_telehealth_action,
         case
-        when c_prod_all.external_id is not null and nvl(to_varchar(c_prod_all.fax_number), '') <> nvl(to_varchar(c_share_union.fax_number), '') then 'fax_number' else null
+        when c_prod.external_id is not null and nvl(to_varchar(c_prod.fax_number), '') <> nvl(to_varchar(c_share_union.fax_number), '') then 'fax_number' else null
         end as fax_number_action,
         case
-        when c_prod_all.external_id is not null and nvl(to_varchar(c_prod_all.tdd_tty), '') <> nvl(to_varchar(c_share_union.tdd_tty), '') then 'tdd_tty' else null
+        when c_prod.external_id is not null and nvl(to_varchar(c_prod.tdd_tty), '') <> nvl(to_varchar(c_share_union.tdd_tty), '') then 'tdd_tty' else null
         end as tdd_tty_action,
         case
-        -- when c_prod_all.external_id is not null and try_to_boolean(c_prod_all.hide_address) <> try_to_boolean(c_share_union.hide_address) then 'hide_address' else null
-        -- when c_prod_all.external_id is not null and nvl(c_prod_all.hide_address, '') <> nvl(c_share_union.hide_address, '') then 'hide_address' else null
-         when c_prod_all.external_id is not null and nvl(c_prod_all.hide_address::string, '') <> nvl(c_share_union.hide_address::string, '') 
+        -- when c_prod.external_id is not null and try_to_boolean(c_prod.hide_address) <> try_to_boolean(c_share_union.hide_address) then 'hide_address' else null
+        -- when c_prod.external_id is not null and nvl(c_prod.hide_address, '') <> nvl(c_share_union.hide_address, '') then 'hide_address' else null
+         when c_prod.external_id is not null and nvl(c_prod.hide_address::string, '') <> nvl(c_share_union.hide_address::string, '') 
                 then 'hide_address' else null --6/6 BR update -- hide_address should have value of 'yes'/'no'
         end as hide_address_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.provider_location_display_label, '') <> nvl(c_share_union.provider_location_display_label, '') then 'provider_location_display_label' else null
+        when c_prod.external_id is not null and nvl(c_prod.provider_location_display_label, '') <> nvl(c_share_union.provider_location_display_label, '') then 'provider_location_display_label' else null
         end as provider_location_display_label_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.website, '') <> nvl(c_share_union.website, '') then 'website' else null
+        when c_prod.external_id is not null and nvl(c_prod.website, '') <> nvl(c_share_union.website, '') then 'website' else null
         end as website_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.npi, '') <> nvl(c_share_union.npi, '') then 'npi' else null
+        when c_prod.external_id is not null and nvl(c_prod.npi, '') <> nvl(c_share_union.npi, '') then 'npi' else null
         end as npi_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.population_served, '') <> nvl(c_share_union.population_served, '') then 'population_served' else null
+        when c_prod.external_id is not null and nvl(c_prod.population_served, '') <> nvl(c_share_union.population_served, '') then 'population_served' else null
         end as population_served_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.gender, '') <> nvl(c_share_union.gender, '') then 'gender' else null
+        when c_prod.external_id is not null and nvl(c_prod.gender, '') <> nvl(c_share_union.gender, '') then 'gender' else null
         end as gender_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.accessibility, '') <> nvl(c_share_union.accessibility, '') then 'accessibility' else null
+        when c_prod.external_id is not null and nvl(c_prod.accessibility, '') <> nvl(c_share_union.accessibility, '') then 'accessibility' else null
         end as accessibility_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.insurance, '') <> nvl(c_share_union.insurance, '') then 'insurance' else null
+        when c_prod.external_id is not null and nvl(c_prod.insurance, '') <> nvl(c_share_union.insurance, '') then 'insurance' else null
         end as insurance_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.language_services, '') <> nvl(c_share_union.language_services, '') then 'language_services' else null
+        when c_prod.external_id is not null and nvl(c_prod.language_services, '') <> nvl(c_share_union.language_services, '') then 'language_services' else null
         end as language_services_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.monday_hours, '') <> nvl(c_share_union.monday_hours, '') then 'monday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.monday_hours, '') <> nvl(c_share_union.monday_hours, '') then 'monday_hours' else null
         end as monday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.monday_open, '') <> nvl(c_share_union.monday_open, '') then 'monday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.monday_open, '') <> nvl(c_share_union.monday_open, '') then 'monday_open' else null
         end as monday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.monday_close, '') <> nvl(c_share_union.monday_close, '') then 'monday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.monday_close, '') <> nvl(c_share_union.monday_close, '') then 'monday_close' else null
         end as monday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.tuesday_hours, '') <> nvl(c_share_union.tuesday_hours, '') then 'tuesday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.tuesday_hours, '') <> nvl(c_share_union.tuesday_hours, '') then 'tuesday_hours' else null
         end as tuesday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.tuesday_open, '') <> nvl(c_share_union.tuesday_open, '') then 'tuesday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.tuesday_open, '') <> nvl(c_share_union.tuesday_open, '') then 'tuesday_open' else null
         end as tuesday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.tuesday_close, '') <> nvl(c_share_union.tuesday_close, '') then 'tuesday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.tuesday_close, '') <> nvl(c_share_union.tuesday_close, '') then 'tuesday_close' else null
         end as tuesday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.wednesday_hours, '') <> nvl(c_share_union.wednesday_hours, '') then 'wednesday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.wednesday_hours, '') <> nvl(c_share_union.wednesday_hours, '') then 'wednesday_hours' else null
         end as wednesday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.wednesday_open, '') <> nvl(c_share_union.wednesday_open, '') then 'wednesday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.wednesday_open, '') <> nvl(c_share_union.wednesday_open, '') then 'wednesday_open' else null
         end as wednesday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.wednesday_close, '') <> nvl(c_share_union.wednesday_close, '') then 'wednesday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.wednesday_close, '') <> nvl(c_share_union.wednesday_close, '') then 'wednesday_close' else null
         end as wednesday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.thursday_hours, '') <> nvl(c_share_union.thursday_hours, '') then 'thursday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.thursday_hours, '') <> nvl(c_share_union.thursday_hours, '') then 'thursday_hours' else null
         end as thursday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.thursday_open, '') <> nvl(c_share_union.thursday_open, '') then 'thursday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.thursday_open, '') <> nvl(c_share_union.thursday_open, '') then 'thursday_open' else null
         end as thursday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.thursday_close, '') <> nvl(c_share_union.thursday_close, '') then 'thursday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.thursday_close, '') <> nvl(c_share_union.thursday_close, '') then 'thursday_close' else null
         end as thursday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.friday_hours, '') <> nvl(c_share_union.friday_hours, '') then 'friday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.friday_hours, '') <> nvl(c_share_union.friday_hours, '') then 'friday_hours' else null
         end as friday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.friday_open, '') <> nvl(c_share_union.friday_open, '') then 'friday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.friday_open, '') <> nvl(c_share_union.friday_open, '') then 'friday_open' else null
         end as friday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.friday_close, '') <> nvl(c_share_union.friday_close, '') then 'friday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.friday_close, '') <> nvl(c_share_union.friday_close, '') then 'friday_close' else null
         end as friday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.saturday_hours, '') <> nvl(c_share_union.saturday_hours, '') then 'saturday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.saturday_hours, '') <> nvl(c_share_union.saturday_hours, '') then 'saturday_hours' else null
         end as saturday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.saturday_open, '') <> nvl(c_share_union.saturday_open, '') then 'saturday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.saturday_open, '') <> nvl(c_share_union.saturday_open, '') then 'saturday_open' else null
         end as saturday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.saturday_close, '') <> nvl(c_share_union.saturday_close, '') then 'saturday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.saturday_close, '') <> nvl(c_share_union.saturday_close, '') then 'saturday_close' else null
         end as saturday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.sunday_hours, '') <> nvl(c_share_union.sunday_hours, '') then 'sunday_hours' else null
+        when c_prod.external_id is not null and nvl(c_prod.sunday_hours, '') <> nvl(c_share_union.sunday_hours, '') then 'sunday_hours' else null
         end as sunday_hours_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.sunday_open, '') <> nvl(c_share_union.sunday_open, '') then 'sunday_open' else null
+        when c_prod.external_id is not null and nvl(c_prod.sunday_open, '') <> nvl(c_share_union.sunday_open, '') then 'sunday_open' else null
         end as sunday_open_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.sunday_close, '') <> nvl(c_share_union.sunday_close, '') then 'sunday_close' else null
+        when c_prod.external_id is not null and nvl(c_prod.sunday_close, '') <> nvl(c_share_union.sunday_close, '') then 'sunday_close' else null
         end as sunday_close_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.circle_program::string, '') <> nvl(c_share_union.circle_program::string, '') 
+        when c_prod.external_id is not null and nvl(c_prod.circle_program::string, '') <> nvl(c_share_union.circle_program::string, '') 
                 then 'circle_program' else null --6/6 BR update -- circle_program has value of 'No' or blank only
         end as circle_program_action, 
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.mso_affiliation, '') <> nvl(c_share_union.mso_affiliation, '') then 'mso_affiliation' else null
+        when c_prod.external_id is not null and nvl(c_prod.mso_affiliation, '') <> nvl(c_share_union.mso_affiliation, '') then 'mso_affiliation' else null
         end as mso_affiliation_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.rae, '') <> nvl(c_share_union.rae, '') then 'rae' else null
+        when c_prod.external_id is not null and nvl(c_prod.rae, '') <> nvl(c_share_union.rae, '') then 'rae' else null
         end as rae_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.aso, '') <> nvl(c_share_union.aso, '') then 'aso' else null
+        when c_prod.external_id is not null and nvl(c_prod.aso, '') <> nvl(c_share_union.aso, '') then 'aso' else null
         end as aso_action,
         case
-        -- when c_prod_all.external_id is not null and try_to_date(c_prod_all.provider_directory_form_modified_date) <> try_to_date(c_share_union.provider_directory_form_modified_date) then 'provider_directory_form_modified_date' else null
-        when c_prod_all.external_id is not null and nvl(to_varchar(c_prod_all.provider_directory_form_modified_date), '') <> nvl(to_varchar(c_share_union.provider_directory_form_modified_date), '') then 'provider_directory_form_modified_date' else null
+        -- when c_prod.external_id is not null and try_to_date(c_prod.provider_directory_form_modified_date) <> try_to_date(c_share_union.provider_directory_form_modified_date) then 'provider_directory_form_modified_date' else null
+        when c_prod.external_id is not null and nvl(to_varchar(c_prod.provider_directory_form_modified_date), '') <> nvl(to_varchar(c_share_union.provider_directory_form_modified_date), '') then 'provider_directory_form_modified_date' else null
         end as provider_directory_form_modified_date_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.accepting_new_patients::string, '') <> nvl(c_share_union.accepting_new_patients::string, '') then 'accepting_new_patients' else null
-        -- when c_prod_all.external_id is not null and try_to_boolean(c_prod_all.accepting_new_patients) <> try_to_boolean(c_share_union.accepting_new_patients) then 'accepting_new_patients' else null
+        when c_prod.external_id is not null and nvl(c_prod.accepting_new_patients::string, '') <> nvl(c_share_union.accepting_new_patients::string, '') then 'accepting_new_patients' else null
+        -- when c_prod.external_id is not null and try_to_boolean(c_prod.accepting_new_patients) <> try_to_boolean(c_share_union.accepting_new_patients) then 'accepting_new_patients' else null
         end as accepting_new_patients_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.telehealth_restrictions::string, '') <> nvl(c_share_union.telehealth_restrictions::string, '') then 'telehealth_restrictions' else null
-        -- when c_prod_all.external_id is not null and try_to_boolean(c_prod_all.telehealth_restrictions) <> try_to_boolean(c_share_union.telehealth_restrictions) then 'telehealth_restrictions' else null
+        when c_prod.external_id is not null and nvl(c_prod.telehealth_restrictions::string, '') <> nvl(c_share_union.telehealth_restrictions::string, '') then 'telehealth_restrictions' else null
+        -- when c_prod.external_id is not null and try_to_boolean(c_prod.telehealth_restrictions) <> try_to_boolean(c_share_union.telehealth_restrictions) then 'telehealth_restrictions' else null
         end as telehealth_restrictions_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.residential_services, '') <> nvl(c_share_union.residential_services, '') then 'residential_services' else null
+        when c_prod.external_id is not null and nvl(c_prod.residential_services, '') <> nvl(c_share_union.residential_services, '') then 'residential_services' else null
         end as residential_services_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.mental_health_settings, '') <> nvl(c_share_union.mental_health_settings, '') then 'mental_health_settings' else null
+        when c_prod.external_id is not null and nvl(c_prod.mental_health_settings, '') <> nvl(c_share_union.mental_health_settings, '') then 'mental_health_settings' else null
         end as mental_health_settings_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.service_types, '') <> nvl(service_types.service_types, '') then 'service_types' else null
+        when c_prod.external_id is not null and nvl(c_prod.service_types, '') <> nvl(service_types.service_types, '') then 'service_types' else null
         end as service_types_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.latitude, '') <> nvl(c_share_union.latitude, '') then 'latitude' else null
+        when c_prod.external_id is not null and nvl(c_prod.latitude, '') <> nvl(c_share_union.latitude, '') then 'latitude' else null
         end as latitude_action, 
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.longitude, '') <> nvl(c_share_union.longitude, '') then 'longitude' else null
+        when c_prod.external_id is not null and nvl(c_prod.longitude, '') <> nvl(c_share_union.longitude, '') then 'longitude' else null
         end as longitude_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.map_coordinates, '') <> nvl(c_share_union.map_coordinates, '') then 'map_coordinates' else null
+        when c_prod.external_id is not null and nvl(c_prod.map_coordinates, '') <> nvl(c_share_union.map_coordinates, '') then 'map_coordinates' else null
         end as map_coordinates_action,
         case
-        when c_prod_all.external_id is not null and nvl(c_prod_all.map_popup, '') <> nvl(map_popup_cte.map_popup, '') then 'map_popup' else null
+        when c_prod.external_id is not null and nvl(c_prod.map_popup, '') <> nvl(map_popup_cte.map_popup, '') then 'map_popup' else null
         end as map_popup_action,
 		case 
-		when c_prod_all.external_id is not null and nvl(c_prod_all.owner_id, '') <> nvl(locs.location_id, '') then 'owner' else null
+		when c_prod.external_id is not null and nvl(c_prod.owner_id, '') <> nvl(locs.location_id, '') then 'owner' else null
 		end as owner_action,
         case 
-        when c_prod_all.external_id is not null and (
+        when c_prod.external_id is not null and (
                  case_name_action is not null 
                   or display_name_action is not null
                   or account_name_action is not null 
@@ -923,12 +925,12 @@ c_prod_all as (
                   -- map_popup_action is not null
                   or owner_action is not null
                   ) then 'update' 
-        when c_prod_all.external_id is null and c_share_union.ladders_external_id is not null then 'create'
+        when c_prod.external_id is null and c_share_union.ladders_external_id is not null then 'create'
         else null end as action,
         current_timestamp() as import_date --,
         -- 12/1 for tile_header | 12/4 BR: commented out tile_header related
         -- concat(tile_header.text_before_display_name,tile_header.display_name, tile_header.text_before_phone_display, tile_header.phone_display, tile_header.text_before_address_full, tile_header.address_full, tile_header.text_before_mental_health_settings, RTRIM(tile_header.mental_health_settings,', '),tile_header.text_before_insurance,  RTRIM(tile_header.insurance,', '), tile_header.text_before_referral_type, RTRIM(tile_header.referral_type,', '), tile_header.text_before_exclusions, RTRIM(tile_header.exclusions,', '), tile_header.text_view_more_info_link1, tile_header.project_space, tile_header.text_view_more_info_link2) as tile_header
-	from  c_share_union left join c_prod_all on c_prod_all.case_id = c_share_union.case_id 
+from  c_share_union left join c_prod on c_prod.external_id = c_share_union.ladders_external_id 
               left join clinic_type on c_share_union.ladders_external_id = clinic_type.ladders_external_id
               --5/28 sprint D: BR include new fields
               left join service_types on c_share_union.ladders_external_id = service_types.ladders_external_id
@@ -937,8 +939,8 @@ c_prod_all as (
               -- left join tile_header on c_share_union.ladders_external_id = tile_header.ladders_external_id
               left join p_prod on p_prod.external_id = c_share_union.provider_external_id
               left join locs on locs.site_code = c_share_union.ladders_external_id
-	where action is not null 
-	order by action,ladders_external_id, c_prod_all.date_opened, c_share_union.case_name
+where action is not null 
+order by action,ladders_external_id, c_prod.date_opened, c_share_union.case_name
  )
  
  select 
