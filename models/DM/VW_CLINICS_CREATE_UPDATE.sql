@@ -337,7 +337,13 @@ clinic_type_list as (
     from c_share 
     order by ladders_external_id),
 
-clinic_type as (
+clinic_type_prod as (
+    select 
+        external_id, 
+        clinic_type
+    from c_prod
+)
+, clinic_type_share as (
    select ladders_external_id, listagg (services, ' ') WITHIN GROUP(order by services) as clinic_type 
    from 
    (
@@ -351,9 +357,19 @@ clinic_type as (
  
                     )
     ) group by ladders_external_id order by ladders_external_id desc
-),
+)
 
-service_types_list as (
+, clinic_type as (
+	select *
+	from (
+		select *, 1 as priority from clinic_type_share
+		union
+		select *, 2 as priority from clinic_type_prod
+	)
+	qualify row_number() over (partition by LADDERS_EXTERNAL_ID order by priority asc) = 1
+)
+
+, service_types_list as (
     select ladders_external_id, 
         case when ACTIVE_SUD_LICENSE = 'TRUE' then 'substance_use' else null end as substance_use,
         case when ACTIVE_MH_DESIGNATION = 'TRUE' then 'mental_health' else null end as mental_health,
@@ -362,7 +378,7 @@ service_types_list as (
     order by ladders_external_id
 ),
 
-service_types as (
+service_types_share as (
 select ladders_external_id, listagg (services, ' ') WITHIN GROUP(order by services) as service_types 
    from 
    (
@@ -371,11 +387,38 @@ select ladders_external_id, listagg (services, ' ') WITHIN GROUP(order by servic
             unpivot (services for column_list in (substance_use,mental_health, recovery_support_services_organization))
     ) group by ladders_external_id order by ladders_external_id desc
 ), 
-map_popup_cte as (
+
+service_types_prod as (
+    select external_id, service_types 
+   from c_prod
+)
+, service_types as (
+	select *
+	from (
+		select *, 1 as priority from service_types_share
+		union
+		select *, 2 as priority from service_types_prod
+	)
+	qualify row_number() over (partition by LADDERS_EXTERNAL_ID order by priority asc) = 1
+)
+, map_popup_cte_share as (
 select ladders_external_id, c_share.display_name, c_share.phone_display, c_share.address_full, c_share.insurance, c_prod.referral_type,
 dm.get_map_popup(c_share.display_name, c_share.phone_display, c_share.address_full, c_share.insurance, c_prod.referral_type) as map_popup
  from  c_share join c_prod on c_share.ladders_external_id = c_prod.external_id
     order by ladders_external_id
+)
+, map_popup_cte_prod as (
+select external_id, display_name, phone_display, address_full, insurance, referral_type, map_popup
+ from c_prod
+)
+, map_popup_cte as (
+	select *
+	from (
+		select *, 1 as priority from map_popup_cte_share
+		union
+		select *, 2 as priority from map_popup_cte_prod
+	)
+	qualify row_number() over (partition by LADDERS_EXTERNAL_ID order by priority asc) = 1
 )
 -- 05/06/2024 c_prod_prep (along with c_share_union) will be used for additional data check between c_share and c_prod (with c_share is the primary data source)
 -- that if a case is not synced between c_share and c_prod, data will be retained between these two data sources
@@ -530,6 +573,7 @@ select
         iff(c_share_union.rsso_license_number = '', null, c_share_union.rsso_license_number) as rsso_license_number,
         iff(c_share_union.offers_telehealth = '', null, c_share_union.offers_telehealth) as offers_telehealth,
         iff(length(iff(c_share_union.fax_number = '', null, c_share_union.fax_number)) >=10, c_share_union.fax_number, null) as fax_number,
+        iff(length(iff(c_share_union.tdd_tty = '', null, c_share_union.tdd_tty)) >=10, c_share_union.tdd_tty, null) as tdd_tty_calc,
         iff(length(iff(c_share_union.tdd_tty = '', null, c_share_union.tdd_tty)) >=10, c_share_union.tdd_tty, null) as tdd_tty,
         iff(c_share_union.provider_location_display_label = '', null, c_share_union.provider_location_display_label) as provider_location_display_label,
         iff(c_share_union.website = '', null, c_share_union.website) as website,
@@ -665,7 +709,7 @@ select
             when c_prod.external_id is not null and nvl(c_prod.address_zip, '') <> nvl(c_share_union.address_zip, '') then 'update_address_zip' else null
         end as address_zip_action,
         case
-            when c_prod.external_id is not null and nvl(trim(c_prod.clinic_type), '') <> nvl(clinic_type.clinic_type, '') then 'update_clinic_type' else null
+            when c_prod.external_id is not null and nvl(trim(c_prod.clinic_type), '') <> nvl(trim(clinic_type.clinic_type), '') then 'update_clinic_type' else null
         end as clinic_type_action,
         case
             when c_prod.external_id is not null and nvl(c_prod.phone_number::string, '') <> nvl(c_share_union.phone::string, '') then 'update_phone_number' else null
@@ -707,7 +751,7 @@ select
         when c_prod.external_id is not null and nvl(to_varchar(c_prod.fax_number), '') <> nvl(to_varchar(c_share_union.fax_number), '') then 'fax_number' else null
         end as fax_number_action,
         case
-        when c_prod.external_id is not null and nvl(to_varchar(c_prod.tdd_tty), '') <> nvl(to_varchar(c_share_union.tdd_tty), '') then 'tdd_tty' else null
+        when c_prod.external_id is not null and nvl(to_varchar(c_prod.tdd_tty), '') <> nvl(to_varchar(tdd_tty_calc), '') then 'tdd_tty' else null
         end as tdd_tty_action,
         case
         -- when c_prod.external_id is not null and try_to_boolean(c_prod.hide_address) <> try_to_boolean(c_share_union.hide_address) then 'hide_address' else null
