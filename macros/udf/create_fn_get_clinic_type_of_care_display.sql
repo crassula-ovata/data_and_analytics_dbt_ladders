@@ -1,4 +1,4 @@
-{% macro CREATE_FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY() %}
+{% macro create_fn_get_clinic_type_of_care_display() %}
 
 CREATE OR REPLACE FUNCTION DM_LADDERS_TEST.DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY(residential_services VARCHAR(), mental_health_settings varchar())
 RETURNS VARCHAR(16777216)
