@@ -429,7 +429,7 @@ select external_id, display_name, phone_display, address_full, insurance, referr
 	,null as PROVIDER_NAME
 	, CASE_NAME
 	, DISPLAY_NAME
-	,DISPLAY_NAME as ACCOUNT_NAME
+	, ACCOUNT_NAME
 	, COUNTY
 	, ADDRESS_CITY
 	, ADDRESS_FULL
