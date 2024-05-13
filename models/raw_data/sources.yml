@@ -35,6 +35,7 @@ sources:
     tables:
       - name: ACTION_TIME
       - name: CASE_ALIAS
+      - name: CASE_CAPACITY
       - name: CASE_CLIENT
       - name: CASE_CLINIC
       - name: CASE_COMMCARE_USER
