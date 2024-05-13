@@ -40,6 +40,42 @@ with payloads as (
                 || ' } }') payload 
     from VW_UNIT_UPDATE
     union
+    select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
+        CASE_TYPE,
+        parse_json(
+    '{ "create": false' || ', ' ||  
+        case when nullif(CASE_ID,'') is null then '"external_id": ' else '"case_id": ' end || 
+        case when nullif(CASE_ID,'') is null then '"' || 
+        replace(replace(replace(EXTERNAL_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' else '"' || replace(replace(replace(CASE_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' end || 
+        '"case_type": ' || '"' || 
+        replace(replace(replace(CASE_TYPE, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' || 
+        '"owner_id": ' || '"' || 
+        replace(replace(replace(OWNER_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' ||
+        '"indices": ' || 
+        '{ "parent": {' || 
+                        case when nullif(PARENT_CASE_ID,'') is null then '"external_id": ' else '"case_id": ' end ||
+                        case when nullif(PARENT_CASE_ID,'') is null then '"' || replace(replace(replace(EXTERNAL_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' else '"' || replace(replace(replace(PARENT_CASE_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' end ||
+                        '"case_type": ' || '"' || replace(replace(replace(PARENT_CASE_TYPE, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' ||
+                        '"relationship": ' || '"' || replace(replace(replace(PARENT_RELATIONSHIP, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '" } },' ||
+        trim(
+        '"properties": {' ||
+        case when nullif(clinic_case_name_display,'') is not null 
+                then '"clinic_case_name_display": ' || ifnull('"' || replace(replace(replace(clinic_case_name_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_map_coordinates,'') is not null 
+                then '"clinic_map_coordinates": ' || ifnull('"' || replace(replace(replace(clinic_map_coordinates, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_map_popup,'') is not null 
+                then '"clinic_map_popup": ' || ifnull('"' || replace(replace(replace(clinic_map_popup, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_type_of_care_display,'') is not null 
+                then '"clinic_type_of_care_display": ' || ifnull('"' || replace(replace(replace(clinic_type_of_care_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
+        case when nullif(clinic_address_full_display,'') is not null 
+                then '"clinic_address_full_display": ' || ifnull('"' || replace(replace(replace(clinic_address_full_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
+        case when nullif(clinic_insurance_display,'') is not null 
+                then '"clinic_insurance_display": ' || ifnull('"' || replace(replace(replace(clinic_insurance_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end 
+                
+           , ',' )    -- rtrim trailing comma from the key properties' values
+            || ' } }') payload 
+    from VW_CAPACITY_UPDATE
+    union
     --11/29: SL added for VW_UNIT_UPDATE end
     select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
         CASE_TYPE, -- use provider external id and case type to sort
