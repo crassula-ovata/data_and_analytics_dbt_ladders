@@ -13,7 +13,8 @@ CREATE OR REPLACE FUNCTION
       invalid
     {% endif %}
 
-.DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY(residential_services VARCHAR(), mental_health_settings varchar())
+-- .DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY(residential_services VARCHAR(), mental_health_settings varchar())
+.DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY("residential_services" VARCHAR(16777216), "mental_health_settings" VARCHAR())
 RETURNS VARCHAR(16777216)
 LANGUAGE SQL
 AS '{{ fn_get_clinic_type_of_care_display() }}';
