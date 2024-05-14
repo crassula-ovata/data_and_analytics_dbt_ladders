@@ -6,7 +6,7 @@ dm_table_data_capacity as (
       select * from  {{ source('dm_table_data', 'CASE_CAPACITY') }}
 ), 
 
-with cte_check_property_update as 
+cte_check_property_update as 
 (
 select 
         capacity.case_id, 
