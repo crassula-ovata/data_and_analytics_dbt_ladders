@@ -24,7 +24,7 @@ select
             end as clinic_map_coordinates,
          case  
             when --nvl(DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <> nvl(capacity.clinic_map_popup, '')  <>  nvl(capacity.clinic_map_popup, '')
-            nvl(DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <>  nvl('not valid', '')
+            nvl(DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <>  nvl(capacity.clinic_map_popup, '')
                 then DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type)
             else null end as clinic_map_popup,
         case 
