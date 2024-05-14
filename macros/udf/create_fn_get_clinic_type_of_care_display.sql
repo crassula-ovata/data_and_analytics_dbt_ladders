@@ -1,0 +1,8 @@
+{% macro create_fn_get_clinic_type_of_care_display() %}
+
+CREATE OR REPLACE FUNCTION DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY("RESIDENTIAL_SERVICES" VARCHAR(16777216), "MENTAL_HEALTH_SETTINGS" VARCHAR(16777216))
+RETURNS VARCHAR(16777216)
+LANGUAGE SQL
+AS '{{ fn_get_clinic_type_of_care_display() }}';
+
+{% endmacro %}
