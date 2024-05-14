@@ -53,5 +53,6 @@ models:
         - "{{ create_extract_from_population_served() }}"       
         - "{{ create_fn_insurance_display() }}"       
         - "{{ create_fn_mental_health_settings_display() }}"       
-        - "{{ create_get_map_popup() }}"       
+        - "{{ create_get_map_popup() }}" 
+        - "{{ create_fn_get_clinic_type_of_care_display() }}"
 
