@@ -23,14 +23,14 @@ select
             then clinic.map_coordinates else null 
             end as clinic_map_coordinates,
          case  
-            when --nvl(DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <> nvl(capacity.clinic_map_popup, '')  <>  nvl(capacity.clinic_map_popup, '')
-            nvl(DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <>  nvl(capacity.clinic_map_popup, '')
-                then DM_LADDERS_test.dm.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type)
+            when --nvl(DM.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <> nvl(capacity.clinic_map_popup, '')  <>  nvl(capacity.clinic_map_popup, '')
+            nvl(DM.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <>  nvl(capacity.clinic_map_popup, '')
+                then DM.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type)
             else null end as clinic_map_popup,
         case 
-            when nvl(DM_LADDERS_test.DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY( clinic.residential_services,clinic.mental_health_settings), '') <> nvl(capacity.clinic_type_of_care_display, '') 
+            when nvl(DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY( clinic.residential_services,clinic.mental_health_settings), '') <> nvl(capacity.clinic_type_of_care_display, '') 
                 then
-               DM_LADDERS_test.DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY( clinic.residential_services, clinic.mental_health_settings)
+               DM.FN_GET_CLINIC_TYPE_OF_CARE_DISPLAY( clinic.residential_services, clinic.mental_health_settings)
             else null 
             end as clinic_type_of_care_display, 
         case 
@@ -42,8 +42,8 @@ select
        case 
             when clinic.insurance is null and capacity.clinic_insurance_display is null then 'No information available'
             when clinic.insurance is null and nvl(capacity.clinic_insurance_display, '') = 'No information available' then null 
-            when   nvl(DM_LADDERS_test.DM.FN_INSURANCE_DISPLAY(clinic.insurance), '') <> nvl(capacity.clinic_insurance_display, '') 
-                then DM_LADDERS_test.DM.FN_INSURANCE_DISPLAY(clinic.insurance)
+            when   nvl(DM.FN_INSURANCE_DISPLAY(clinic.insurance), '') <> nvl(capacity.clinic_insurance_display, '') 
+                then DM.FN_INSURANCE_DISPLAY(clinic.insurance)
             else null end as clinic_insurance_display
     from  dm_table_data_capacity capacity 
     left join  dm_table_data_clinic clinic 
