@@ -7,7 +7,7 @@ dm_table_data_unit as (
 dm_table_data_capacity as (
     select * from  {{ source('dm_table_data', 'CASE_CAPACITY') }}
 ), 
-final as 
+final as
 (
     select
         unit.parent_case_id as parent_case_id,
@@ -49,8 +49,8 @@ final as
         unit.last_updated_date_time_raw::string as clinic_availability_last_updated_date_time_raw,
         clinic.map_coordinates as clinic_map_coordinates,
         clinic.map_popup as clinic_map_popup,
-        'https://www.commcarehq.org/a/co-carecoordination-' || {{get_domain_name()}} || '/app/v1/a1a67a223416440199f060b6a94d15a6/view_facility/?case_id=' as view_more_info_smartlink_referrals,
-        'https://www.commcarehq.org/a/co-carecoordination-' || {{get_domain_name()}} || '/app/v1/1e8de29bae5745e99ed2fb1d1a55adac/view_facility/?case_id=' as view_more_info_smartlink_bed_tracker,
+        'https://www.commcarehq.org/a/co-carecoordination-{{get_domain_name()}}/app/v1/a1a67a223416440199f060b6a94d15a6/view_facility/?case_id=' as view_more_info_smartlink_referrals,
+        'https://www.commcarehq.org/a/co-carecoordination-{{get_domain_name()}}/app/v1/1e8de29bae5745e99ed2fb1d1a55adac/view_facility/?case_id=' as view_more_info_smartlink_bed_tracker,
         '0' as open_beds,
         'open' as current_status,
         unit.gender as unit_gender,
