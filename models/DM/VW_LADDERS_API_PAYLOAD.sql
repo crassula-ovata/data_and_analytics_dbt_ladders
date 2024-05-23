@@ -328,7 +328,14 @@ with payloads as (
                                     from VW_CLINICS_CREATE_UPDATE 
 )
 , numbered_payloads as ( --add row numbers and groupings of 100 at a time
-  select row_number() over(order by PROV_ID asc, case_type desc) rownum, ceil(rownum/100) grouping, payload from payloads
+  select row_number() over(order by PROV_ID asc, 
+  case
+         when lower(case_type) = 'provider' then 1
+         when lower(case_type) = 'clinic' then 2
+         when lower(case_type) = 'unit' then 3
+         when lower(case_type) = 'capacity' then 4
+         end
+  ) rownum, ceil(rownum/100) grouping, payload from payloads
 ),
 final as (
 select grouping, '[' || listagg(payload::string, ',') || ']' payload --concatenate payloads into arrays of up to 100
