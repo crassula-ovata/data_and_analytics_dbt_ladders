@@ -47,9 +47,11 @@ with payloads as (
                             '"case_type": ' || '"' || PARENT_CASE_TYPE || '", ' ||
                             '"relationship": ' || '"' || PARENT_RELATIONSHIP || '" } },' ||
             '"properties": {' ||
-            '"accepts_commcare_referrals": ' || '"' || accepts_commcare_referrals ||  '",'  || 
+            '"clinic_accepts_commcare_referrals": ' || '"' || clinic_accepts_commcare_referrals ||  '",'  || 
             case when nullif(clinic_case_name_display,'') is not null 
-                    then '"clinic_case_name_display": ' || '"' || clinic_case_name_display ||  '"' || ',' else '' end || 
+                    then '"clinic_case_name_display": ' || '"' || clinic_case_name_display ||  '"' || ',' else '' end ||
+            case when nullif(unit_case_name_display,'') is not null 
+                    then '"unit_case_name_display": ' || '"' || unit_case_name_display ||  '"' || ',' else '' end || 
             case when nullif(clinic_phone_referrals_display,'') is not null 
                     then '"clinic_phone_referrals_display": ' ||  '"' || clinic_phone_referrals_display ||  '"'  || ',' else '' end || 
             case when nullif(clinic_type_of_care_display,'') is not null 
