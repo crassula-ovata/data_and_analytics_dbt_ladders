@@ -17,10 +17,11 @@ final as
         'capacity' as case_type,
         '' as external_id,
         '' as case_id,
-        'Template Bed Group 1' as CASE_NAME,
+        'Template Bed Group 1' as case_name,
         unit.owner_id as owner_id,
         clinic.display_name as clinic_case_name_display,
-        'yes' as accepts_commcare_referrals,
+        unit.case_name as unit_case_name_display,
+        'yes' as clinic_accepts_commcare_referrals,
         case
             when clinic.phone_referrals is null
                 then 'No information available'
@@ -76,7 +77,8 @@ select
     case_name,
     owner_id,
     clinic_case_name_display,
-    accepts_commcare_referrals,
+    unit_case_name_display,
+    clinic_accepts_commcare_referrals,
     clinic_phone_referrals_display,
     clinic_type_of_care_display,
     clinic_address_full_display,
