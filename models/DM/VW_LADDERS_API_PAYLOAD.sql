@@ -11,7 +11,7 @@ with payloads as (
             '"case_name": ' || '"' || CASE_NAME  || '",' || 
             '"indices": ' || 
             '{ "parent": {' || 
-                            '"external_id": '  ||'"' || PARENT_EXTERNAL_ID || '", ' ||
+                            '"case_id": '  ||'"' || PARENT_CASE_ID || '", ' ||
                             '"case_type": ' || '"' || PARENT_CASE_TYPE || '", ' ||
                             '"relationship": ' || '"' || PARENT_RELATIONSHIP || '" } },' ||
             '"properties": {' ||
