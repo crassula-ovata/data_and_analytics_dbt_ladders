@@ -1,27 +1,30 @@
 with 
 dm_table_data_unit as (
-      select * from  {{ source('dm_table_data', 'CASE_UNIT') }}
+      select * from {{ source('dm_table_data', 'CASE_UNIT') }}
+),
+dm_table_data_clinic as (
+      select * from  {{ source('dm_table_data', 'CASE_CLINIC') }}
 ),
 dm_table_data_location as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
 ),
-
+clinic_wo_unit as (
+    select case_id from  dm_table_data_clinic where closed = false
+    and case_id not in (select parent_case_id from dm_table_data_unit where closed=false)
+),
 final as
 (
     select
-        -- parent/index properties
         clinic.case_name as parent_case_name,
-        NULL as PARENT_CASE_ID,
-        clinic.ladders_external_id::string as parent_external_id,
-        'clinic' as PARENT_CASE_TYPE,
-        'extension' as PARENT_RELATIONSHIP,
+        clinic.case_id as parent_case_id,
+        clinic.external_id::string as parent_external_id,
+        'clinic' as parent_case_type,
+        'extension' as parent_relationship,
         'parent' as parent_identifier,
-        ----- Unit properties
-        null as external_id,
-        'unit' as CASE_TYPE,
-        null as CASE_ID,
-        loc.id as OWNER_ID, --unit owner_id
-        'Template Unit 1' as CASE_NAME,
+        'unit' as case_type,
+        null as case_id,
+        loc.id as owned_id,
+        'Template Unit 1' as case_name,
         'template_unit_1' as unit_name_no_spaces,
         clinic.residential_services as residential_services,
         clinic.population_served as population_served,
@@ -33,15 +36,13 @@ final as
         '-1' as last_updated_date_time_raw, 
         '0' as open_beds_count
     from 
-        dm.VW_CLINICS_CREATE_UPDATE clinic 
-        inner join 
-        dm_table_data_location loc 
-        on (clinic.ladders_external_id || 'facility_data') = loc.site_code
+        dm_table_data_clinic clinic 
+        inner join dm_table_data_location loc 
+        on clinic.owner_id = loc.parent_location_id
         and
         loc.location_type_code = 'facility_data' 
-        and clinic.action = 'create' 
-        and clinic.owner_id is not null
-        -- and clinic.facility_data_id is not null ??
+        and clinic.closed = false
+        and clinic.case_id in (select * from clinic_wo_unit)
 ) 
 select
     PARENT_CASE_NAME,
