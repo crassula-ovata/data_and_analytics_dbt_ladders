@@ -8,13 +8,13 @@ with payloads as (
             '{ "create": true' || ', ' ||  
             '"case_type": "unit",' || 
             '"owner_id": ' || '"' || OWNER_ID || '", ' ||
+            '"case_name": ' || '"' || CASE_NAME  || '",' || 
             '"indices": ' || 
             '{ "parent": {' || 
                             '"external_id": '  ||'"' || PARENT_EXTERNAL_ID || '", ' ||
                             '"case_type": ' || '"' || PARENT_CASE_TYPE || '", ' ||
                             '"relationship": ' || '"' || PARENT_RELATIONSHIP || '" } },' ||
             '"properties": {' ||
-             '"case_name": ' || '"' || CASE_NAME  || '",' || 
               '"unit_name_no_spaces": ' || '"' || unit_name_no_spaces ||  '",'  || 
             case when nullif(residential_services,'') is not null 
                     then '"residential_services": ' || '"' || residential_services ||  '"' || ',' else '' end || 
@@ -40,14 +40,13 @@ with payloads as (
             '{ "create": true' || ', ' ||  
             '"case_type": "capacity",' || 
             '"owner_id": ' || '"' || OWNER_ID || '", ' ||
+             '"case_name": ' || '"' || CASE_NAME  || '",' || 
             '"indices": ' || 
             '{ "parent": {' || 
                             '"case_id": '  ||'"' || PARENT_CASE_ID || '", ' ||
                             '"case_type": ' || '"' || PARENT_CASE_TYPE || '", ' ||
                             '"relationship": ' || '"' || PARENT_RELATIONSHIP || '" } },' ||
             '"properties": {' ||
-             '"case_name": ' || '"' || CASE_NAME  || '",' || 
-
             '"accepts_commcare_referrals": ' || '"' || accepts_commcare_referrals ||  '",'  || 
             case when nullif(clinic_case_name_display,'') is not null 
                     then '"clinic_case_name_display": ' || '"' || clinic_case_name_display ||  '"' || ',' else '' end || 
