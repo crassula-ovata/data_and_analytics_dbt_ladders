@@ -14,9 +14,9 @@ models:
       tests:
       - not_null
       - unique
-      #- relationships:
-      #    to: source('dm_table_data', 'custoCASE_PROVIDERmers')
-      #    field: case_id      
+      - relationships:
+          to: source('dm_table_data', CASE_PROVIDER')
+          field: case_id      
     - name: CASE_TYPE
       tests:
       - not_null
