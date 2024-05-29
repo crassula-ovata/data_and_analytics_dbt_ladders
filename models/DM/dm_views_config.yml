@@ -6,7 +6,7 @@ models:
       - not_null
       - unique
       - relationships:
-          to: source('dm_table_data', CASE_PROVIDER')
+          to: source('dm_table_data', 'CASE_PROVIDER')
           field: case_id      
     - name: CASE_TYPE
       tests:
@@ -45,5 +45,5 @@ models:
           tests:
           - column_not_empty
         - name: SERVICE_TYPES
-            tests:
-            - column_not_empty
+          tests:
+          - column_not_empty
