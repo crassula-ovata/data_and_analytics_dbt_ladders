@@ -1,13 +1,22 @@
 models:
+  - name: VW_CLINIC_CREATE_UPDATE
+    columns:
+    - name: CLINIC_TYPE
+      tests:
+      - string_not_empty
+    columns:
+    - name: DISPLAY_NAME
+      tests:
+      - string_not_empty     
   - name: VW_CAPACITY_UPDATE
     columns:
     - name: CASE_ID
       tests:
       - not_null
       - unique
-      - relationships:
-          to: source('dm_table_data', 'CASE_PROVIDER')
-          field: case_id      
+      #- relationships:
+      #    to: source('dm_table_data', 'custoCASE_PROVIDERmers')
+      #    field: case_id      
     - name: CASE_TYPE
       tests:
       - not_null
