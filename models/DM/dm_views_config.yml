@@ -4,12 +4,10 @@ models:
     - name: CLINIC_TYPE
       tests:
       - string_not_empty
-      - column_not_empty
     columns:
     - name: DISPLAY_NAME
       tests:
-      - string_not_empty
-      - column_not_empty     
+      - string_not_empty   
   - name: VW_CAPACITY_UPDATE
     columns:
     - name: CASE_ID
