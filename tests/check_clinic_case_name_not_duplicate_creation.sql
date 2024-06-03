@@ -5,7 +5,7 @@ dm_table_data_clinic_open as (
 )
 
 select * 
-from  VW_CLINICS_CREATE_UPDATE 
+from  {{ ref('VW_CLINICS_CREATE_UPDATE')}} 
 where
     action = 'create'
     and case_name in (select case_name from dm_table_data_clinic_open)
