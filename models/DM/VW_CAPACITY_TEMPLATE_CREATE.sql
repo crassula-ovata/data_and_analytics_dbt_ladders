@@ -63,7 +63,7 @@ final as
         on unit.parent_case_id = clinic.case_id 
         and
         unit.case_id not in 
-            (select unit_case_ids from dm_table_data_capacity where unit_case_ids is not null)
+            (select unit_case_ids from dm_table_data_capacity where closed = false and unit_case_ids is not null)
         and unit.closed = false
 ) 
 select
