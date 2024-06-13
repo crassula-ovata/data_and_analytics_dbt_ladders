@@ -19,7 +19,7 @@ jobs:
         run: |
           pip install dbt-snowflake
           dbt deps    
-      - name: Run dbt models
-        run: dbt run --target prod
       - name: Test dbt models
         run: dbt test --target prod
+      - name: Run dbt models
+        run: dbt run --target prod
