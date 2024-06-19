@@ -51,6 +51,7 @@ sources:
       - name: WEB_USER
       - name: FIXTURE_CLINIC_TYPE
       - name: FIXTURE_MENTAL_HEALTH_SETTINGS
+      - name: FIXTURE_SERVICE_TYPES
 
   - name: hades_table_data
     database: 
