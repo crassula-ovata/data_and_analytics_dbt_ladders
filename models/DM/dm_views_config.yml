@@ -2,23 +2,42 @@ models:
   - name: VW_CLINICS_CREATE_UPDATE
     columns:
     - name: CLINIC_TYPE
-      data_tests:
+      tests:
       - string_not_empty
+      - split_value_not_in_fixture:
+              ref_fixture: 'FIXTURE_CLINIC_TYPE'
     columns:
     - name: DISPLAY_NAME
-      data_tests:
-      - string_not_empty   
+      tests:
+      - string_not_empty
+    - name: MENTAL_HEALTH_SETTINGS
+      tests:
+      - split_value_not_in_fixture:
+              ref_fixture: 'FIXTURE_MENTAL_HEALTH_SETTINGS'
+    - name: SERVICE_TYPES
+      tests:
+      - split_value_not_in_fixture:
+              ref_fixture: 'FIXTURE_SERVICE_TYPES'
+    - name: INSURANCE
+      tests:
+      - split_value_not_in_fixture:
+              ref_fixture: 'FIXTURE_INSURANCE'
+    - name: RESIDENTIAL_SERVICES
+      tests:
+      - split_value_not_in_fixture:
+              ref_fixture: 'FIXTURE_RESIDENTIAL_SERVICES'
+    - name: POPULATION_SERVED
+      tests:
+      - split_value_not_in_fixture:
+              ref_fixture: 'FIXTURE_POPULATION_SERVED'     
   - name: VW_CAPACITY_UPDATE
     columns:
     - name: CASE_ID
-      data_tests:
+      tests:
       - not_null
-      - unique
-      #- relationships:
-      #    to: source('dm_table_data', 'custoCASE_PROVIDERmers')
-      #    field: case_id      
+      - unique      
     - name: CASE_TYPE
-      data_tests:
+      tests:
       - not_null
       - accepted_values:
           values: ['capacity']
@@ -26,25 +45,25 @@ models:
   - name: VW_CAPACITY_TEMPLATE_CREATE
     columns:
         - name: OWNER_ID
-          data_tests:
+          tests:
           - string_not_empty   
         - name: PARENT_CASE_TYPE
-          data_tests:
+          tests:
           - string_not_empty
         - name: UNIT_CASE_NAME_DISPLAY
-          data_tests:
+          tests:
           - string_not_empty
         - name: UNIT_CASE_IDS
-          data_tests:
+          tests:
           - string_not_empty
   - name: VW_UNIT_TEMPLATE_CREATE
     columns:
         - name: OWNER_ID
-          data_tests:
+          tests:
           - string_not_empty   
         - name: PARENT_CASE_ID
-          data_tests:
+          tests:
           - string_not_empty
         - name: CLINIC_DISPLAY_NAME
-          data_tests:
+          tests:
           - string_not_empty
