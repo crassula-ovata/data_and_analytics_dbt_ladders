@@ -1,4 +1,4 @@
-{% test child_column_not_equal_parent_column_with_null_handling(model, column_name, parent_table, parent_column_name) %}
+{% test child_column_not_equal_parent_column_with_null_handling(model, column_name, parent_table, parent_column_name, function_call, function_name, function_params) %}
 /*
 This test checks that the values in a specified column of the child table
 do not match the values in a specified column of the parent table. 
@@ -11,11 +11,20 @@ Parameters:
   parent_column_name: the column in the parent table to be checked
 */
 
+{%- set params_qualified = [] %}
+{%- for param in function_params %}
+    {% set params_qualified = params_qualified.append('parent_case.' ~ param) %}
+{%- endfor %}
+{%- set params_str = params_qualified | join(', ') %}
+
 -- Get parent table
 with dm_table_data_parent as (
     select
         case_id,
-        {{ parent_column_name }}
+        {% if not function_call %}
+            {{ parent_column_name }},
+        {% endif %}
+        {{ function_params | join(', ') }}  -- Include params from function_params
     from
         {{ source('dm_table_data', parent_table) }}
 ),
@@ -40,8 +49,17 @@ mismatched_values as (
         or
         -- Handle the case where parent column has a value
         (
-            coalesce(parent_case.{{ parent_column_name }}, '') <> ''
-            and child_case.{{ column_name }} <> parent_case.{{ parent_column_name }}
+            {% if function_call %}
+                (
+                    coalesce(parent_case.{{ parent_column_name }}, '') <> ''
+                    and child_case.{{ column_name }} <> {{ function_name }}({{ params_str }})
+                )
+            {% else %}
+                (
+                    coalesce(parent_case.{{ parent_column_name }}, '') <> ''
+                    and child_case.{{ column_name }} <> parent_case.{{ parent_column_name }}
+                )
+            {% endif %}
         )
 )
 
