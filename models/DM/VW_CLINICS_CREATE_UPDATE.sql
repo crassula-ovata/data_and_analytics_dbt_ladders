@@ -304,35 +304,30 @@ c_share as (
 
 clinic_type_list as (
     select 
-        ladders_external_id, 
-        case 
-            when opioid_treatment_provider = 'TRUE' then 'opioid_treatment_provider' else null end as opioid_treatment_provider,
-        case 
-            when residential_child_care_facility = 'TRUE' then 'residential_child_care_facility' else null end as residential_child_care_facility,
+        ladders_external_id,
         case 
             when hospital = 'TRUE' then 'hospital' else null end as hospital,
         case 
-            when community_mental_health_clinic = 'TRUE' then 'community_mental_health_clinic' else null end as community_mental_health_clinic,
-        case 
             when community_mental_health_center = 'TRUE' then 'community_mental_health_center' else null end as community_mental_health_center,
         case 
-            when clinic_managed_low_intense_res_svcs = 'TRUE' then 'clinic_managed_low_intense_res_svcs' else null end as                                                       clinic_managed_low_intense_res_svcs,
+            when community_mental_health_clinic = 'TRUE' then 'community_mental_health_clinic' else null end as community_mental_health_clinic,
         case 
-            when clinic_managed_high_intense_res_svcs = 'TRUE' then 'clinic_managed_high_intense_res_svcs' else null end as                                                     clinic_managed_high_intense_res_svcs,
+            when residential_child_care_facility = 'TRUE' then 'residential_child_care_facility' else null end as residential_child_care_facility,
         case 
-            when clinic_managed_med_intense_res_svcs = 'TRUE' then 'clinic_managed_med_intense_res_svcs' else null end as                                                       clinic_managed_med_intense_res_svcs,
+            when opioid_treatment_provider = 'TRUE' then 'opioid_treatment_provider' else null end as opioid_treatment_provider,
         case 
-            when medically_monitored_intense_res_trtmt = 'TRUE' then 'medically_monitored_intense_res_trtmt' else null end as                                                   medically_monitored_intense_res_trtmt,
-        case 
-            when clinic_managed_residential_detox = 'TRUE' then 'clinic_managed_residential_detox' else null end as clinic_managed_residential_detox,
-        case 
-            when med_monitored_inpatient_detox = 'TRUE' then 'med_monitored_inpatient_detox' else null end as med_monitored_inpatient_detox,
-        --update 5/25: This logic is now incorporated with outpatient_su_services and intensive_outpatient_su_services since they all feed to the sustance_use_services property
-         case 
-             when substance_use_services is not null then 'intensive_outpatient_su_services' else null end as intensive_outpatient_su_services,
-        -- BR  5/25 : add additional logic for new fields START ------------------------------------------
-        case 
-             when (OUTPATIENT_SU_SERVICES is not null or INTENSIVE_OUTPATIENT_SU_SERVICES is not null or substance_use_services is not null) then 'substance_use_services' 
+             when 
+             (
+                outpatient_su_services is not null or 
+                intensive_outpatient_su_services is not null or 
+                substance_use_services is not null or
+                clinic_managed_low_intense_res_svcs = 'TRUE' or
+                clinic_managed_med_intense_res_svcs = 'TRUE' or
+                clinic_managed_high_intense_res_svcs = 'TRUE' or
+                medically_monitored_intense_res_trtmt = 'TRUE' or
+                clinic_managed_residential_detox = 'TRUE' or
+                med_monitored_inpatient_detox = 'TRUE'
+             ) then 'substance_use_services' 
              else null  end as substance_use_services
     from c_share 
     order by ladders_external_id),
@@ -349,12 +344,12 @@ clinic_type_prod as (
    (
        select ladders_external_id, services 
        from clinic_type_list
-            unpivot (services for column_list in (clinic_managed_low_intense_res_svcs, clinic_managed_high_intense_res_svcs,
-                                                    clinic_managed_med_intense_res_svcs, medically_monitored_intense_res_trtmt,
-                                                    clinic_managed_residential_detox, med_monitored_inpatient_detox,
-                                                    opioid_treatment_provider, residential_child_care_facility,hospital, community_mental_health_clinic,
-                                                    community_mental_health_center, substance_use_services, intensive_outpatient_su_services)
- 
+            unpivot (services for column_list in (hospital,
+                                        community_mental_health_center, 
+                                        community_mental_health_clinic,
+                                        residential_child_care_facility,
+                                        opioid_treatment_provider,
+                                        substance_use_services)
                     )
     ) group by ladders_external_id order by ladders_external_id desc
 )
