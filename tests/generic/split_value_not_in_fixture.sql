@@ -1,4 +1,13 @@
 {% test split_value_not_in_fixture(model, column_name, ref_fixture) %}
+/*
+This test checks that the values (list of items separated by a space) in a given column, 
+does not exist in the list of valid-options in the corresponding lookup-table table, or Fixture.
+
+Parameters:
+  model: the child table to be tested
+  column_name: the column in the child table to be checked
+  ref_fixture: the corresponding fixture, lookup-table, for the model
+*/
 
 with 
 dm_table_data_fixture as (
