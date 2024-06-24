@@ -2,95 +2,95 @@ models:
   - name: VW_CLINICS_CREATE_UPDATE
     columns:
     - name: PARENT_CASE_ID
-      tests:
+      data_tests:
       - relationships:
               to: "{{ source('dm_table_data', 'CASE_PROVIDER') }}"
               field: CASE_ID
     - name: OWNER_ID
-      tests:
+      data_tests:
       - relationships:
               to: "{{ source('dm_table_data', 'LOCATION') }}"
               field: ID
     - name: DISPLAY_NAME
-      tests:
+      data_tests:
       - string_not_empty
     - name: CLINIC_TYPE
-      tests:
+      data_tests:
       - string_not_empty
       - split_value_not_in_fixture:
               ref_fixture: 'FIXTURE_CLINIC_TYPE'
     - name: MENTAL_HEALTH_SETTINGS
-      tests:
+      data_tests:
       - split_value_not_in_fixture:
               ref_fixture: 'FIXTURE_MENTAL_HEALTH_SETTINGS'
     - name: SERVICE_TYPES
-      tests:
+      data_tests:
       - split_value_not_in_fixture:
               ref_fixture: 'FIXTURE_SERVICE_TYPES'
     - name: INSURANCE
-      tests:
+      data_tests:
       - split_value_not_in_fixture:
               ref_fixture: 'FIXTURE_INSURANCE'
     - name: RESIDENTIAL_SERVICES
-      tests:
+      data_tests:
       - split_value_not_in_fixture:
               ref_fixture: 'FIXTURE_RESIDENTIAL_SERVICES'
     - name: POPULATION_SERVED
-      tests:
+      data_tests:
       - split_value_not_in_fixture:
               ref_fixture: 'FIXTURE_POPULATION_SERVED'     
   - name: VW_CAPACITY_TEMPLATE_CREATE
     columns:
         - name: OWNER_ID
-          tests:
+          data_tests:
           - string_not_empty   
         - name: PARENT_CASE_TYPE
-          tests:
+          data_tests:
           - string_not_empty
         - name: UNIT_CASE_NAME_DISPLAY
-          tests:
+          data_tests:
           - string_not_empty
         - name: UNIT_CASE_IDS
-          tests:
+          data_tests:
           - string_not_empty
   - name: VW_UNIT_TEMPLATE_CREATE
     columns:
         - name: OWNER_ID
-          tests:
+          data_tests:
           - string_not_empty   
         - name: PARENT_CASE_ID
-          tests:
+          data_tests:
           - string_not_empty
         - name: CLINIC_DISPLAY_NAME
-          tests:
+          data_tests:
           - string_not_empty
   - name: VW_UNIT_UPDATE
     columns:
       - name: MAP_COORDINATES
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'MAP_COORDINATES'
       - name: CLINIC_DISPLAY_NAME
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column_with_null_handling:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'DISPLAY_NAME'
                 function_call: false 
       - name: CLINIC_PHONE_DISPLAY
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column_with_null_handling:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'PHONE_DISPLAY'
                 function_call: false
       - name: CLINIC_ADDRESS_FULL_DISPLAY
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column_with_null_handling:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'ADDRESS_FULL'
                 function_call: false
       - name: CLINIC_MENTAL_HEALTH_SETTINGS_DISPLAY
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column_with_null_handling:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'MENTAL_HEALTH_SETTINGS'
@@ -98,7 +98,7 @@ models:
                 function_name: 'FN_MENTAL_HEALTH_SETTINGS_DISPLAY'
                 function_params: ['mental_health_settings']
       - name: CLINIC_INSURANCE_DISPLAY
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column_with_null_handling:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'INSURANCE'
@@ -108,17 +108,17 @@ models:
   - name: VW_CAPACITY_UPDATE
     columns:
       - name: CASE_ID
-        tests:
+        data_tests:
         - not_null
         - unique      
       - name: CASE_TYPE
-        tests:
+        data_tests:
         - not_null
         - accepted_values:
             values: ['capacity']
         - string_not_empty
       - name: CLINIC_ADDRESS_FULL_DISPLAY
-        tests:
+        data_tests:
         - child_column_not_equal_parent_column_with_null_handling:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'ADDRESS_FULL'
