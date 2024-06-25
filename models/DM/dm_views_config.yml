@@ -4,12 +4,12 @@ models:
     - name: PARENT_CASE_ID
       data_tests:
       - relationships:
-              to: "{{ source('dm_table_data', 'CASE_PROVIDER') }}"
+              to: source('dm_table_data', 'CASE_PROVIDER')
               field: CASE_ID
     - name: OWNER_ID
       data_tests:
       - relationships:
-              to: "{{ source('dm_table_data', 'LOCATION') }}"
+              to: source('dm_table_data', 'LOCATION')
               field: ID
     - name: DISPLAY_NAME
       data_tests:
