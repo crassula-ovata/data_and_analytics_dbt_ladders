@@ -347,3 +347,4 @@ select
 	GROUPING,
 	PAYLOAD
 from final
+where nullif(payload, '[]') is not null
