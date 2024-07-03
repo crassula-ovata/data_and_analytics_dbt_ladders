@@ -49,6 +49,12 @@ sources:
       - name: CASE_UNIT
       - name: LOCATION
       - name: WEB_USER
+      - name: FIXTURE_CLINIC_TYPE
+      - name: FIXTURE_MENTAL_HEALTH_SETTINGS
+      - name: FIXTURE_SERVICE_TYPES
+      - name: FIXTURE_INSURANCE
+      - name: FIXTURE_RESIDENTIAL_SERVICES
+      - name: FIXTURE_POPULATION_SERVED
 
   - name: hades_table_data
     database: 
