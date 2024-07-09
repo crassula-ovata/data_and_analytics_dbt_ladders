@@ -21,10 +21,10 @@ final as
         unit.owner_id as owner_id,
         clinic.display_name as clinic_case_name_display,
         unit.case_name as unit_case_name_display,
-        'yes' as clinic_accepts_commcare_referrals,
+        'no' as clinic_accepts_commcare_referrals,
         case
             when clinic.phone_referrals is null
-                then 'No information available'
+                then 'N/A'
             else
                 regexp_replace(clinic.phone_referrals, $$(\d{3})(\d{3})(\d{4})$$, $$(\1) \2-\3$$)
         end as clinic_phone_referrals_display,
@@ -39,14 +39,14 @@ final as
                 then 'Substance Use'
             else ''
         end as clinic_type_of_care_display,
-        coalesce(clinic.address_full, 'No information available') as clinic_address_full_display,
-        nvl(clinic.transportation_service, 'No information available')  as clinic_transportation_service_display,
+        coalesce(clinic.address_full, 'N/A') as clinic_address_full_display,
+        nvl(clinic.transportation_service, 'N/A')  as clinic_transportation_service_display,
         case 
-            when clinic.insurance is null then 'No information available'
+            when clinic.insurance is null then 'N/A'
             else replace(clinic.insurance, ' ', ', ') 
         end as clinic_insurance_display,
-        'No information available' as gender_display,
-        'No information available' as acuity_display,
+        'N/A' as gender_display,
+        'N/A' as acuity_display,
         unit.last_updated_date_time_raw::string as clinic_availability_last_updated_date_time_raw,
         clinic.map_coordinates as clinic_map_coordinates,
         clinic.map_popup as clinic_map_popup,
