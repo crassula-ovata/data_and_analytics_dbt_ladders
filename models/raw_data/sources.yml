@@ -65,4 +65,5 @@ sources:
       - name: VWS_LADDERS_ACTIVE_LICENSES
       - name: VWS_LADDERS_BHE_ACTIVE_LICENSES
       - name: VWS_LADDERS_BHE_ONLY_ACTIVE_LICENSES
+      - name: VWS_LADDERS_MAPPED_ACTIVE_LICENSES
       - name: VW_BHA_LADDERS_RAW               
