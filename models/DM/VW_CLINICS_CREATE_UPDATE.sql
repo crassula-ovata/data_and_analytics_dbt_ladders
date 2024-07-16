@@ -6,7 +6,8 @@ dm_table_data_provider as (
       select * from  {{ source('dm_table_data', 'CASE_PROVIDER') }}
 ), 
 hades_table_data_ladders_active_licenses as (
-      select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
+      --select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
+      select * from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
 ), 
 locs as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
