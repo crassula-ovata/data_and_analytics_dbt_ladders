@@ -20,31 +20,31 @@ select
         case when nvl(unit.map_coordinates, '') <> nvl(clinic.map_coordinates, '') 
             then clinic.map_coordinates else null end as map_coordinates,
         case 
-            when clinic.display_name is null and unit.clinic_display_name is null then 'No information available'
-            when clinic.display_name is null and nvl(unit.clinic_display_name, '') = 'No information available' then null 
+            when clinic.display_name is null and unit.clinic_display_name is null then 'N/A'
+            when clinic.display_name is null and nvl(unit.clinic_display_name, '') = 'N/A' then null 
             when nvl(clinic.display_name, '') <> nvl(unit.clinic_display_name, '') then clinic.display_name 
             else null end as clinic_display_name,
         -- 12/5 BR: included additional fields from BHA request
         case 
-            when clinic.phone_display is null and unit.clinic_phone_display is null then 'No information available'
-            when clinic.phone_display is null and nvl(unit.clinic_phone_display, '') = 'No information available' then null 
+            when clinic.phone_display is null and unit.clinic_phone_display is null then 'N/A'
+            when clinic.phone_display is null and nvl(unit.clinic_phone_display, '') = 'N/A' then null 
             when nvl(clinic.phone_display, '') <> nvl(unit.clinic_phone_display, '') then clinic.phone_display 
             else null end as clinic_phone_display,           
         case 
-            when clinic.address_full is null and unit.clinic_address_full_display is null then 'No information available'
-            when clinic.address_full is null and nvl(unit.clinic_address_full_display, '') = 'No information available' then null 
+            when clinic.address_full is null and unit.clinic_address_full_display is null then 'N/A'
+            when clinic.address_full is null and nvl(unit.clinic_address_full_display, '') = 'N/A' then null 
             when   nvl(clinic.address_full, '') <> nvl(unit.clinic_address_full_display, '') then clinic.address_full 
             else null end as clinic_address_full_display,
         case 
-            when clinic.mental_health_settings is null and unit.clinic_mental_health_settings_display is null then 'No information available'
-            when clinic.mental_health_settings is null and nvl(unit.clinic_mental_health_settings_display, '') = 'No information available' then null 
+            when clinic.mental_health_settings is null and unit.clinic_mental_health_settings_display is null then 'N/A'
+            when clinic.mental_health_settings is null and nvl(unit.clinic_mental_health_settings_display, '') = 'N/A' then null 
             when   nvl(DM.FN_MENTAL_HEALTH_SETTINGS_DISPLAY(clinic.mental_health_settings), '') <> nvl(unit.clinic_mental_health_settings_display, '') 
                 then
                 DM.FN_MENTAL_HEALTH_SETTINGS_DISPLAY(clinic.mental_health_settings)
             else null end as clinic_mental_health_settings_display,
         case 
-            when clinic.insurance is null and unit.clinic_insurance_display is null then 'No information available'
-            when clinic.insurance is null and nvl(unit.clinic_insurance_display, '') = 'No information available' then null 
+            when clinic.insurance is null and unit.clinic_insurance_display is null then 'N/A'
+            when clinic.insurance is null and nvl(unit.clinic_insurance_display, '') = 'N/A' then null 
             when   nvl(DM.FN_INSURANCE_DISPLAY(clinic.insurance), '') <> nvl(unit.clinic_insurance_display, '') 
                 then DM.FN_INSURANCE_DISPLAY(clinic.insurance)
             else null end as clinic_insurance_display,

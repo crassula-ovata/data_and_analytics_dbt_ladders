@@ -44,7 +44,7 @@ mismatched_values as (
         -- Handle the case where parent column is NULL
         (
             coalesce(parent_case.{{ parent_column_name }}, '') = ''
-            and child_case.{{ column_name }} <> 'No information available'
+            and child_case.{{ column_name }} <> 'N/A'
         )
         or
         -- Handle the case where parent column has a value
