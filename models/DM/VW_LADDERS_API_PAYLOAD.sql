@@ -1,6 +1,87 @@
 with payloads as (
     --12/1: BR updated logic to include clinic_display_name and additional logic for json
     --11/29: SL added for VW_UNIT_UPDATE start
+    select 
+    case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
+    CASE_TYPE, 
+    parse_json(
+            '{ "create": true' || ', ' ||  
+            '"case_type": "unit",' || 
+            '"owner_id": ' || '"' || OWNER_ID || '", ' ||
+            '"case_name": ' || '"' || CASE_NAME  || '",' || 
+            '"indices": ' || 
+            '{ "parent": {' || 
+                            '"case_id": '  ||'"' || PARENT_CASE_ID || '", ' ||
+                            '"case_type": ' || '"' || PARENT_CASE_TYPE || '", ' ||
+                            '"relationship": ' || '"' || PARENT_RELATIONSHIP || '" } },' ||
+            '"properties": {' ||
+              '"unit_name_no_spaces": ' || '"' || unit_name_no_spaces ||  '",'  || 
+            case when nullif(residential_services,'') is not null 
+                    then '"residential_services": ' || '"' || residential_services ||  '"' || ',' else '' end || 
+            case when nullif(population_served,'') is not null 
+                    then '"population_served": ' ||  '"' || population_served ||  '"'  || ',' else '' end || 
+            case when nullif(accessibility,'') is not null 
+                    then '"accessibility": ' || '"'   || accessibility ||  '"'  || ',' else '' end || 
+            case when nullif(gender,'') is not null 
+                    then '"gender": ' || '"'   || gender ||  '"'  || ',' else '' end || 
+            case when nullif(current_status,'') is not null 
+                    then '"current_status": ' || '"' || current_status ||  '"'   || ',' else '' end ||
+            '"last_updated_date_time_raw": ' || '"' || last_updated_date_time_raw ||  '",'  ||
+
+            '"open_beds_count": ' || '"' || open_beds_count ||  '"'  || -- rtrim trailing comma from the key properties' values
+                 ' } }') payload 
+    from VW_UNIT_TEMPLATE_CREATE
+    union 
+    select 
+    case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
+    CASE_TYPE, 
+    parse_json(
+            '{ "create": true' || ', ' ||  
+            '"case_type": "capacity",' || 
+            '"owner_id": ' || '"' || OWNER_ID || '", ' ||
+             '"case_name": ' || '"' || CASE_NAME  || '",' || 
+            '"indices": ' || 
+            '{ "parent": {' || 
+                            '"case_id": '  ||'"' || PARENT_CASE_ID || '", ' ||
+                            '"case_type": ' || '"' || PARENT_CASE_TYPE || '", ' ||
+                            '"relationship": ' || '"' || PARENT_RELATIONSHIP || '" } },' ||
+            '"properties": {' ||
+            '"clinic_accepts_commcare_referrals": ' || '"' || clinic_accepts_commcare_referrals ||  '",'  || 
+            case when nullif(clinic_case_name_display,'') is not null 
+                    then '"clinic_case_name_display": ' || '"' || clinic_case_name_display ||  '"' || ',' else '' end ||
+            case when nullif(unit_case_name_display,'') is not null 
+                    then '"unit_case_name_display": ' || '"' || unit_case_name_display ||  '"' || ',' else '' end || 
+            case when nullif(clinic_phone_referrals_display,'') is not null 
+                    then '"clinic_phone_referrals_display": ' ||  '"' || clinic_phone_referrals_display ||  '"'  || ',' else '' end || 
+            case when nullif(clinic_type_of_care_display,'') is not null 
+                    then '"clinic_type_of_care_display": ' || '"'   || clinic_type_of_care_display ||  '"'  || ',' else '' end || 
+            case when nullif(clinic_address_full_display,'') is not null 
+                    then '"clinic_address_full_display": ' || '"'   || clinic_address_full_display ||  '"'  || ',' else '' end || 
+            case when nullif(clinic_transportation_service_display,'') is not null 
+                    then '"clinic_transportation_service_display": ' || '"' || clinic_transportation_service_display ||  '"'   || ',' else '' end ||
+            case when nullif(clinic_insurance_display,'') is not null 
+                    then '"clinic_insurance_display": ' || '"' || clinic_insurance_display ||  '"' || ',' else '' end ||
+            case when nullif(clinic_availability_last_updated_date_time_raw,'') is not null 
+                    then '"clinic_availability_last_updated_date_time_raw": ' || '"' || clinic_availability_last_updated_date_time_raw ||  '"' || ',' else '' end ||
+            case when nullif(clinic_map_coordinates,'') is not null 
+                    then '"clinic_map_coordinates": ' || '"' || clinic_map_coordinates ||  '"' || ',' else '' end ||
+            case when nullif(clinic_map_popup,'') is not null 
+                    then '"clinic_map_popup": ' || '"' || clinic_map_popup ||  '"' || ',' else '' end ||
+            case when nullif(unit_gender,'') is not null 
+                    then '"unit_gender": ' || '"' || unit_gender ||  '"' || ',' else '' end ||
+            case when nullif(unit_population_served,'') is not null 
+                    then '"unit_population_served": ' || '"' || unit_population_served ||  '"' || ',' else '' end ||
+            case when nullif(unit_case_ids,'') is not null 
+                    then '"unit_case_ids": ' || '"' || unit_case_ids ||  '"' || ',' else '' end ||
+            '"view_more_info_smartlink_referrals": ' || '"' || view_more_info_smartlink_referrals ||  '",'  ||
+            '"view_more_info_smartlink_bed_tracker": ' || '"' || view_more_info_smartlink_bed_tracker ||  '",'  ||
+            '"open_beds": ' || '"' || open_beds ||  '",'  ||
+            '"current_status": ' || '"' || current_status ||  '",'  ||
+            '"gender_display": ' || '"' || gender_display ||  '",'  ||
+            '"acuity_display": ' || '"' || acuity_display ||  '"'  ||
+                 ' } }') payload 
+    from VW_CAPACITY_TEMPLATE_CREATE
+    union 
     select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
         CASE_TYPE, 
         parse_json(
@@ -39,6 +120,42 @@ with payloads as (
                , ',' )    -- rtrim trailing comma from the key properties' values
                 || ' } }') payload 
     from VW_UNIT_UPDATE
+    union
+    select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
+        CASE_TYPE,
+        parse_json(
+    '{ "create": false' || ', ' ||  
+        case when nullif(CASE_ID,'') is null then '"external_id": ' else '"case_id": ' end || 
+        case when nullif(CASE_ID,'') is null then '"' || 
+        replace(replace(replace(EXTERNAL_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' else '"' || replace(replace(replace(CASE_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' end || 
+        '"case_type": ' || '"' || 
+        replace(replace(replace(CASE_TYPE, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' || 
+        '"owner_id": ' || '"' || 
+        replace(replace(replace(OWNER_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' ||
+        '"indices": ' || 
+        '{ "parent": {' || 
+                        case when nullif(PARENT_CASE_ID,'') is null then '"external_id": ' else '"case_id": ' end ||
+                        case when nullif(PARENT_CASE_ID,'') is null then '"' || replace(replace(replace(EXTERNAL_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' else '"' || replace(replace(replace(PARENT_CASE_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' end ||
+                        '"case_type": ' || '"' || replace(replace(replace(PARENT_CASE_TYPE, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' ||
+                        '"relationship": ' || '"' || replace(replace(replace(PARENT_RELATIONSHIP, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '" } },' ||
+        trim(
+        '"properties": {' ||
+        case when nullif(clinic_case_name_display,'') is not null 
+                then '"clinic_case_name_display": ' || ifnull('"' || replace(replace(replace(clinic_case_name_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_map_coordinates,'') is not null 
+                then '"clinic_map_coordinates": ' || ifnull('"' || replace(replace(replace(clinic_map_coordinates, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_map_popup,'') is not null 
+                then '"clinic_map_popup": ' || ifnull('"' || replace(replace(replace(clinic_map_popup, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_type_of_care_display,'') is not null 
+                then '"clinic_type_of_care_display": ' || ifnull('"' || replace(replace(replace(clinic_type_of_care_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
+        case when nullif(clinic_address_full_display,'') is not null 
+                then '"clinic_address_full_display": ' || ifnull('"' || replace(replace(replace(clinic_address_full_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
+        case when nullif(clinic_insurance_display,'') is not null 
+                then '"clinic_insurance_display": ' || ifnull('"' || replace(replace(replace(clinic_insurance_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end 
+                
+           , ',' )    -- rtrim trailing comma from the key properties' values
+            || ' } }') payload 
+    from VW_CAPACITY_UPDATE
     union
     --11/29: SL added for VW_UNIT_UPDATE end
     select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
@@ -199,6 +316,8 @@ with payloads as (
                                         then '"gender": ' || ifnull('"' || replace(replace(replace(gender, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when account_name_action is not null or action = 'create' and account_name is not null
                                         then '"account_name": ' || ifnull('"' || replace(replace(replace(account_name, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
+                                    case when action = 'create'
+                                        then '"accepts_commcare_referrals": "no",' else '' end  ||
                                     --12/1: SL added for tile_header
                                     --12/4: BR removed/commented out tile_header. Will be added to Unit cases instead. 
                                     -- '"tile_header": "' || replace(replace(replace(tile_header::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || ',' ||
@@ -209,7 +328,14 @@ with payloads as (
                                     from VW_CLINICS_CREATE_UPDATE 
 )
 , numbered_payloads as ( --add row numbers and groupings of 100 at a time
-  select row_number() over(order by PROV_ID asc, case_type desc) rownum, ceil(rownum/100) grouping, payload from payloads
+  select row_number() over(order by PROV_ID asc, 
+  case
+         when lower(case_type) = 'provider' then 1
+         when lower(case_type) = 'clinic' then 2
+         when lower(case_type) = 'unit' then 3
+         when lower(case_type) = 'capacity' then 4
+         end
+  ) rownum, ceil(rownum/100) grouping, payload from payloads
 ),
 final as (
 select grouping, '[' || listagg(payload::string, ',') || ']' payload --concatenate payloads into arrays of up to 100
@@ -220,3 +346,4 @@ select
 	GROUPING,
 	PAYLOAD
 from final
+where nullif(payload, '[]') is not null

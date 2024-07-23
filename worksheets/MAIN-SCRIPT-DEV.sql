@@ -1,7 +1,7 @@
 use role sysadmin;
 
 create database IF NOT EXISTS DM_LADDERS_TEST;
-use schema DM_LADDERS_TEST;
+use database DM_LADDERS_TEST;
 
 create schema IF NOT EXISTS DM;
 use schema DM;
@@ -107,13 +107,20 @@ create or replace TABLE SQL_LOGS (
 	//constraint TALEND_RUN_FK foreign key (RUN_ID) references TALEND_RUNS(RUN_ID)
 );
 
+//// note
+-- if it's non-test env new project, create appropriate new roles first
+-- if it's test env (e.g. DM_LADDERS_TEST)
+-- go to worksheet ladders_db_grants
+-- more info regarding the write permission for testing env is there
+////
+
 -- create task
 use role accountadmin;
 
 create or replace task DM_LADDERS_TEST.UTIL.S3_UNLOAD_TASK
 	warehouse=COMPUTE_WH
-	schedule='USING CRON 10 05 * * * America/New_York'
-	as Call metadata.procedures.sp_data_unload_test('LADDERS_PAYLOAD_UPDATE', 'task_call_sp_data_unload', 'co-carecoordination-test', 'DM_LADDERS_TEST', 'UTIL', 'DM_LADDERS_TEST', 'UNLOAD_SF_TO_S3_GCP_LOCATION|', null);
+	schedule='USING CRON 20 * * * * America/New_York'
+	as Call metadata.procedures_dev.sp_data_unload('LADDERS_PAYLOAD_UPDATE', 'task_call_sp_data_unload', 'co-carecoordination-test', 'DM_LADDERS_TEST', 'UTIL', 'DM_LADDERS_TEST', 'UNLOAD_SF_TO_S3_GCP_LOCATION|UNLOAD_SF_TO_S3_GCP|', null);
 
 ALTER TASK DM_LADDERS_TEST.UTIL.S3_UNLOAD_TASK RESUME;
 EXECUTE TASK DM_LADDERS_TEST.UTIL.S3_UNLOAD_TASK;
