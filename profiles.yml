@@ -5,49 +5,87 @@ data_and_analytics_dbt_bha_ladders:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_DEV
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
       threads: 1
       type: snowflake
       user: "{{ env_var('DBT_SNOWFLAKE_USER_BHA') }}"
       warehouse: COMPUTE_WH
+      authenticator: username_password_mfa
     qa:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_QA
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
       threads: 1
       type: snowflake
       user: "{{ env_var('DBT_SNOWFLAKE_USER_BHA') }}"
       warehouse: COMPUTE_WH
+      authenticator: username_password_mfa
     prod:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
       database: DM_LADDERS_PROD
       password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
-      schema: DM
-      threads: 1
-      type: snowflake
-      user: "{{ env_var('DBT_SNOWFLAKE_USER_BHA') }}"
-      warehouse: COMPUTE_WH      
-    test-location:
-      account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
-      database: DM_LADDERS_BHA_LOCATION_REDESIGN_1
-      password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      role: "{{ env_var('DBT_SNOWFLAKE_GCP_ROLE') }}"
       schema: DM
       threads: 1
       type: snowflake
       user: "{{ env_var('DBT_SNOWFLAKE_USER_BHA') }}"
       warehouse: COMPUTE_WH
-    test:
+      authenticator: username_password_mfa    
+    test-location:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
-      database: DM_LADDERS_TEST
-      password: "{{ env_var('DBT_SNOWFLAKE_PWD_BHA') }}"
-      role: ACCOUNTADMIN
+      database: DM_LADDERS_BHA_LOCATION_REDESIGN_1
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
+      role: user_dbt_test
       schema: DM
       threads: 1
       type: snowflake
-      user: "{{ env_var('DBT_SNOWFLAKE_USER_BHA') }}"
-      warehouse: COMPUTE_WH      
+      user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
+      warehouse: COMPUTE_WH
+      authenticator: username_password_mfa
+    test-perf:
+      account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
+      database: DM_LADDERS_PERF
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
+      role: user_dbt_test
+      schema: DM
+      threads: 1
+      type: snowflake
+      user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
+      warehouse: COMPUTE_WH
+      authenticator: username_password_mfa
+    test-train:
+      account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
+      database: DM_LADDERS_TRAIN
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
+      role: user_dbt_test
+      schema: DM
+      threads: 1
+      type: snowflake
+      user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
+      warehouse: COMPUTE_WH
+      authenticator: username_password_mfa    
+    test:
+      account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
+      database: DM_LADDERS_TEST
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
+      role: user_dbt_test
+      schema: DM
+      threads: 1
+      type: snowflake
+      user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
+      warehouse: COMPUTE_WH
+      authenticator: username_password_mfa     
+    test-staging:
+      account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT') }}"
+      database: DM_LADDERS_TEST_STAGING
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
+      role: user_dbt_test
+      schema: DM
+      threads: 1
+      type: snowflake
+      user: "{{ env_var('DBT_SNOWFLAKE_USER') }}"
+      warehouse: COMPUTE_WH
+      authenticator: username_password_mfa            

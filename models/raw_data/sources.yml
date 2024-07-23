@@ -8,7 +8,10 @@ sources:
       {%- elif target.name=="qa" -%} DM_LADDERS_QA
       {%- elif target.name=="prod" -%} DM_LADDERS_PROD
       {%- elif target.name=="test-location" -%} DM_LADDERS_BHA_LOCATION_REDESIGN_1
+      {%- elif target.name=="test-perf" -%} DM_LADDERS_PERF
+      {%- elif target.name=="test-train" -%} DM_LADDERS_TRAIN
       {%- elif target.name=="test" -%} DM_LADDERS_TEST
+      {%- elif target.name=="test-staging" -%} DM_LADDERS_TEST_STAGING
       {%- else -%} invalid_database
       {%- endif -%}    
     schema: 
@@ -25,7 +28,10 @@ sources:
       {%- elif target.name=="qa" -%} DM_CO_CARE_COORD_QA
       {%- elif target.name=="prod" -%} DM_CO_CARE_COORD_PROD
       {%- elif target.name=="test-location" -%} DM_BHA_LOCATION_REDESIGN_1
+      {%- elif target.name=="test-perf" -%} DM_CO_CARE_COORD_PERF
+      {%- elif target.name=="test-train" -%} DM_LADDERS_TRAIN      
       {%- elif target.name=="test" -%} DM_CO_CARE_COORD_TEST
+      {%- elif target.name=="test-staging" -%} DM_CO_CARE_COORD_TEST_STAGING
       {%- else -%} invalid_database
       {%- endif -%}  
     schema:
@@ -33,6 +39,7 @@ sources:
     tables:
       - name: ACTION_TIME
       - name: CASE_ALIAS
+      - name: CASE_CAPACITY
       - name: CASE_CLIENT
       - name: CASE_CLINIC
       - name: CASE_COMMCARE_USER
@@ -42,6 +49,12 @@ sources:
       - name: CASE_UNIT
       - name: LOCATION
       - name: WEB_USER
+      - name: FIXTURE_CLINIC_TYPE
+      - name: FIXTURE_MENTAL_HEALTH_SETTINGS
+      - name: FIXTURE_SERVICE_TYPES
+      - name: FIXTURE_INSURANCE
+      - name: FIXTURE_RESIDENTIAL_SERVICES
+      - name: FIXTURE_POPULATION_SERVED
 
   - name: hades_table_data
     database: 
@@ -52,4 +65,5 @@ sources:
       - name: VWS_LADDERS_ACTIVE_LICENSES
       - name: VWS_LADDERS_BHE_ACTIVE_LICENSES
       - name: VWS_LADDERS_BHE_ONLY_ACTIVE_LICENSES
+      - name: VWS_LADDERS_MAPPED_ACTIVE_LICENSES
       - name: VW_BHA_LADDERS_RAW               

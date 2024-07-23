@@ -12,11 +12,13 @@ vars:
   owner_id_provder_prod: 775d5b8c5f1147a6867dfa9ec2c6157e
   owner_id_provder_test: c0cb05f6e88a4c19ab4aa3ad51d13d15
   owner_id_provder_test_location: c0cb05f6e88a4c19ab4aa3ad51d13d15
+  owner_id_provder_test_perf: c0cb05f6e88a4c19ab4aa3ad51d13d15
   owner_id_clinic_dev: 6fc5b9a0b5eb477f81fcd9cb0942cd12
   owner_id_clinic_qa: a9c4c9da089b4840abbb5c4f10cbccd0
   owner_id_clinic_prod: 29c59d3222b44ba08dda0e5c4d20b0fc
   owner_id_clinic_test: 002e9d7507d140ce88872c6e6b7ed29b
   owner_id_clinic_test_location: 002e9d7507d140ce88872c6e6b7ed29b  
+  owner_id_clinic_test_perf: 002e9d7507d140ce88872c6e6b7ed29b  
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'data_and_analytics_dbt_bha_ladders'
@@ -51,5 +53,6 @@ models:
         - "{{ create_extract_from_population_served() }}"       
         - "{{ create_fn_insurance_display() }}"       
         - "{{ create_fn_mental_health_settings_display() }}"       
-        - "{{ create_get_map_popup() }}"       
+        - "{{ create_get_map_popup() }}" 
+        - "{{ create_fn_get_clinic_type_of_care_display() }}"
 
