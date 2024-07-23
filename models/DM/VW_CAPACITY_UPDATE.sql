@@ -34,14 +34,14 @@ select
             else null 
             end as clinic_type_of_care_display, 
         case 
-            when clinic.address_full is null and capacity.clinic_address_full_display is null then 'No information available'
-            when clinic.address_full is null and (nvl(capacity.clinic_address_full_display, '') = 'No information available') then null 
+            when clinic.address_full is null and capacity.clinic_address_full_display is null then 'N/A'
+            when clinic.address_full is null and (nvl(capacity.clinic_address_full_display, '') = 'N/A') then null 
             when nvl(clinic.address_full, '') <> nvl(capacity.clinic_address_full_display, '') then clinic.address_full 
             else null 
             end as clinic_address_full_display,
        case 
-            when clinic.insurance is null and capacity.clinic_insurance_display is null then 'No information available'
-            when clinic.insurance is null and nvl(capacity.clinic_insurance_display, '') = 'No information available' then null 
+            when clinic.insurance is null and capacity.clinic_insurance_display is null then 'N/A'
+            when clinic.insurance is null and nvl(capacity.clinic_insurance_display, '') = 'N/A' then null 
             when   nvl(DM.FN_INSURANCE_DISPLAY(clinic.insurance), '') <> nvl(capacity.clinic_insurance_display, '') 
                 then DM.FN_INSURANCE_DISPLAY(clinic.insurance)
             else null end as clinic_insurance_display
