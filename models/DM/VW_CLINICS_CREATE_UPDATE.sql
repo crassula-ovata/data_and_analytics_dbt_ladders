@@ -108,8 +108,41 @@ c_share as (
         hospital,
         community_mental_health_center,
         community_mental_health_clinic,
-        lower(replace(replace(substance_use_services, ' ','_'), ';_', ' ')) as substance_use_services,
+        
+        case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+            dm.fn_get_substance_use_services(
+                    OUTPATIENT,
+                    INTENSIVE_OUTPATIENT_SU_SERVICES,
+                    GENERAL_TREATMENT,
+                    DUI_DWI,
+                    EDU_TTMT_SVCS_FOR_PERSONS_IN_CJS,
+                    CLINIC_MANAGED_LOW_INTENSE_RES_SVCS,
+                    CLINIC_MANAGED_MED_INTENSE_RES_SVCS,
+                    CLINIC_MANAGED_HIGH_INTENSE_RES_SVCS,
+                    CLINIC_MANAGED_RESIDENTIAL_DETOX,
+                    DUI_DWAI_DRIVING_UNDER_THE_INFLUENCE_D,
+                    GENDER_RESPONSIVE_TTMT_FOR_WOMEN,
+                    DAY_TREATMENT_PARTIAL_HOSPITALIZATION,
+                    MED_MONITORED_INPATIENT_DETOX,
+                    MEDICALLY_MONITORED_INTENSE_RES_TRTMT
+            ) else lower(replace(replace(substance_use_services, ' ','_'), ';_', ' ')) 
+            end as substance_use_services,
         -- JOE 12/21/23: This is to exclude general_treatment, intensive_outpatient, and outpatient
+        case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+           fn_get_residential_services(
+                DUI_DWI,
+                EDU_TTMT_SVCS_FOR_PERSONS_IN_CJS,
+                CLINIC_MANAGED_LOW_INTENSE_RES_SVCS,
+                CLINIC_MANAGED_MED_INTENSE_RES_SVCS,
+                CLINIC_MANAGED_HIGH_INTENSE_RES_SVCS,
+                CLINIC_MANAGED_RESIDENTIAL_DETOX,
+                DUI_DWAI_DRIVING_UNDER_THE_INFLUENCE_D,
+                GENDER_RESPONSIVE_TTMT_FOR_WOMEN,
+                DAY_TREATMENT_PARTIAL_HOSPITALIZATION,
+                MED_MONITORED_INPATIENT_DETOX,
+                MEDICALLY_MONITORED_INTENSE_RES_TRTMT
+            )
+        else 
         trim(
             regexp_replace(
                 replace(
@@ -147,7 +180,7 @@ c_share as (
                 ' +',
                 ' '
             )
-        ) as residential_services,
+        ) end as residential_services,
         outpatient_su_services,
         intensive_outpatient_su_services,
         clinic_managed_low_intense_res_svcs,
@@ -244,6 +277,14 @@ c_share as (
         -- 6/15 BR updates to include map_coordintes
         concat(latitude, ' ', longitude) as map_coordinates,
         -- JOE 12/21/23: This is to exclude intensive_outpatient and outpatient
+
+        case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+            dm.fn_get_mental_health_settings(
+                hospital, emergency, treatment_evaluation_72_hour, residential_long_term_treatment,
+                residential_short_term_treatment, residential_child_care_facility, crisis_stabilization_unit,
+                acute_treatment_unit
+            )
+        else 
         trim(
             regexp_replace(
                 replace(
@@ -274,7 +315,8 @@ c_share as (
                 ' +',
                 ' '
             )
-        ) as mental_health_settings,
+        ) 
+        end as mental_health_settings,
         -- properties used to calculate mental_health_settings_list and the new field mental_health_settings 6/23: BR mental_health_settings_list not used anymore. mapped from mental_health_settings
         psychiatric_residential,
         TREATMENT_EVALUATION_72_HOUR,
