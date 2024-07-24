@@ -1,4 +1,4 @@
-name: job_bha_ladders_prod
+name: job_bha_ladders_test_test
 run-name: manual trigger from GitHub Actions to Snowflake
 on: workflow_dispatch
 env:
@@ -10,7 +10,7 @@ env:
   DBT_SNOWFLAKE_PWD: ${{ secrets.DBT_SNOWFLAKE_PWD }}
   DBT_SNOWFLAKE_GCP_ROLE: ${{ secrets.DBT_SNOWFLAKE_GCP_ROLE }}
 jobs:
-  job_bha_ladders_prod:
+  job_bha_ladders_test_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -21,5 +21,5 @@ jobs:
         run: |
           pip install dbt-snowflake
           dbt deps    
-      - name: Run dbt models
-        run: dbt run --target prod
+      - name: Test dbt models
+        run: dbt test --target test
