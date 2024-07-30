@@ -114,8 +114,8 @@ fac_payloads as (
         '{' || 
         case when fac.location_id is not null then '"location_id": "' || fac.location_id || '",' else '' end || 
         '"name": "' || ld.new_provider_directory_display_name || '",' ||
-        case when ld.latitude is not null then '"latitude": "' || ld.latitude || '",' else '' end || 
-        case when ld.longitude is not null then '"longitude": "' || ld.longitude || '",' else '' end || 
+        case when (ld.latitude is not null and ld.latitude!='') then '"latitude": "' || ld.latitude || '",' else '' end || 
+        case when (ld.longitude is not null and ld.longitude!='') then '"longitude": "' || ld.longitude || '",' else '' end ||         
         '"location_type_code": "facility",' || --clinic
         '"parent_location_id": "' || locs.location_id || '",' || 
         '"site_code": "' || LOC_ID || '"' ||
