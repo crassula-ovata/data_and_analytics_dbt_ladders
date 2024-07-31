@@ -55,4 +55,7 @@ models:
         - "{{ create_fn_mental_health_settings_display() }}"       
         - "{{ create_get_map_popup() }}" 
         - "{{ create_fn_get_clinic_type_of_care_display() }}"
+        - "{{ create_fn_get_mental_health_settings() }}"
+        - "{{ create_fn_get_residential_services() }}"
+        - "{{ create_fn_get_substance_use_services() }}"
 
