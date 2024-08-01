@@ -8,12 +8,15 @@ case_clinic as (
     select * from  {{ source('dm_table_data', 'CASE_CLINIC') }}
 ),
 hades_table_data_ladders_active_licenses as (
-      select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
+      --select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
+      select * from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
 ), 
 ld as (
     select * 
     ,dm.external_id_format (parent_account_id) p_id
     ,dm.external_id_format (account_id) a_id
+    ,nullif(latitude,'') as new_latitude
+    ,nullif(longitude,'') as new_longitude       
     ,
     case when provider_directory_display_name <> '' 
             then replace(replace(replace(provider_directory_display_name, '?', '-'), char(13)), char(10))
@@ -113,8 +116,8 @@ fac_payloads as (
         '{' || 
         case when fac.location_id is not null then '"location_id": "' || fac.location_id || '",' else '' end || 
         '"name": "' || ld.new_provider_directory_display_name || '",' ||
-        case when ld.latitude is not null then '"latitude": "' || ld.latitude || '",' else '' end || 
-        case when ld.longitude is not null then '"longitude": "' || ld.longitude || '",' else '' end || 
+        case when ld.new_latitude is not null then '"latitude": "' || ld.new_latitude || '",' else '' end || 
+        case when ld.new_longitude is not null then '"longitude": "' || ld.new_longitude || '",' else '' end ||         
         '"location_type_code": "facility",' || --clinic
         '"parent_location_id": "' || locs.location_id || '",' || 
         '"site_code": "' || LOC_ID || '"' ||
@@ -127,7 +130,7 @@ fac_payloads as (
         left join locs fac on fac.site_code = p_id || '-' || a_id
                 and fac.location_type_code = 'facility'
     where (fac.location_id is null or (fac.name != ld.new_provider_directory_display_name or locs.location_id != fac.parent_location_id
-            or fac.latitude::number(10,7) != ld.latitude::number(10,7) or fac.longitude::number(10,7) != ld.longitude::number(10,7)))
+            or fac.latitude::number(10,7) != ld.new_latitude::number(10,7) or fac.longitude::number(10,7) != ld.new_longitude::number(10,7)))
         and locs.location_id is not null
         -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
         and account_name <> 'Atlas Counseling & Consulting, PLLC'

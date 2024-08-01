@@ -123,3 +123,20 @@ models:
                 parent_table: 'CASE_CLINIC'
                 parent_column_name: 'ADDRESS_FULL'
                 function_call: false
+  - name: VW_EXTERNAL_ID_UPDATE
+    columns:  
+      - name: CASE_ID
+        data_tests:
+        - not_null
+        - unique    
+      - name: CASE_TYPE
+        data_tests:
+        - not_null
+        - accepted_values:
+            values: ['clinic', 'provider']
+  - name: VW_SITE_CODE_UPDATE
+    columns:  
+      - name: LOC_ID
+        data_tests:
+        - not_null
+        - unique        
