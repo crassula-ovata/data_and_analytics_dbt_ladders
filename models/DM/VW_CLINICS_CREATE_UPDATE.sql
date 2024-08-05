@@ -207,7 +207,7 @@ c_share as (
         case
           when startswith(upper(website), 'HTTP://') or startswith(upper(website), 'HTTPS://') THEN website
           when startswith(upper(website), 'WWW.') then 'https://' || website
-          else 'https://www.' || website
+          else 'https://www.' ||  nullif(trim(website), '')
         end as website,
         -- replace(regexp_replace(replace(regexp_replace(lower(population_served),  ';\\s', ';'), '+', ''), '[^a-zA-Z0-9;]', '_'), ';', ' ') as population_served,
         -- 6/21: BR updated to map youth-> minors_adolescents and only keep one if both youth and minor/adolescets exist
