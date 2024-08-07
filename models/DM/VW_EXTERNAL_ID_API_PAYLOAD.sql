@@ -1,6 +1,6 @@
 with 
 payloads as (
-    select * from VW_EXTERNAL_ID_UPDATE  
+    select * from {{ ref('VW_EXTERNAL_ID_UPDATE') }}
 )
 ,numbered_payloads as ( --add row numbers and groupings of 100 at a time
   select row_number() over(order by CASE_ID asc) rownum, ceil(rownum/100) grouping, payload from payloads
