@@ -16,7 +16,7 @@ DESC integration email_int_obj;
 use role accountadmin;
 use database DM_LADDERS_DEV;
 use schema UTIL;
-
+/*
 CREATE OR REPLACE ALERT DM_LADDERS_DEV.UTIL.s3_int_alert
 WAREHOUSE = COMPUTE_WH
 schedule='USING CRON 00 06 * * * America/New_York'
@@ -30,7 +30,7 @@ schedule='USING CRON 00 06 * * * America/New_York'
     'Email Alert: DM_LADDERS_DEV sql_logs error.',
     'there are errors from util.sql_logs\n start_time='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
-
+*/
 CREATE OR REPLACE ALERT DM_LADDERS_DEV.UTIL.S3_TASK_ALERT
 WAREHOUSE = COMPUTE_WH
 schedule='USING CRON 05 06 * * * America/New_York'
@@ -45,11 +45,28 @@ schedule='USING CRON 05 06 * * * America/New_York'
     'there are errors from util.task_log\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
 
+CREATE OR REPLACE ALERT DM_LADDERS_DEV.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT
+WAREHOUSE = COMPUTE_WH
+schedule='USING CRON 10 06 * * * America/New_York'
+  IF (EXISTS(
+    select * from snowflake.account_usage.task_history where name='LADDERS_MAPPED_TABLE_TASK'
+        and database_name='DM_LADDERS_DEV' and (error_code is not null or state='FAILED')
+        and DATE(query_start_time) > DATEADD(days, -1, sysdate())
+    ))        
+  THEN
+  CALL SYSTEM$SEND_EMAIL(
+    'email_int_obj',
+    'slu@dimagi.com, ush-devops@dimagi.com',
+    'Email Alert: DM_LADDERS_DEV LADDERS_MAPPED_TABLE_TASK_ALERT error.',
+    'there are errors from util.ladders_mapped_table_task_alert\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
+);  
+
 use role accountadmin;
 //drop alert DM_LADDERS_DEV.UTIL.s3_int_alert;
-alter alert DM_LADDERS_DEV.UTIL.S3_TASK_ALERT resume;
+alter alert DM_LADDERS_DEV.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT resume;
 alter alert DM_LADDERS_DEV.UTIL.S3_TASK_ALERT suspend;
 
+execute alert DM_LADDERS_DEV.UTIL.S3_TASK_ALERT;
 show alerts; 
 
 // DM_LADDERS_QA
@@ -57,7 +74,7 @@ show alerts;
 use role accountadmin;
 use database DM_LADDERS_QA;
 use schema UTIL;
-
+/*
 CREATE OR REPLACE ALERT DM_LADDERS_QA.UTIL.s3_int_alert
 WAREHOUSE = COMPUTE_WH
 schedule='USING CRON 00 07 * * * America/New_York'
@@ -71,7 +88,7 @@ schedule='USING CRON 00 07 * * * America/New_York'
     'Email Alert: DM_LADDERS_QA sql_logs error.',
     'there are errors from util.sql_logs\n start_time='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
-
+*/
 CREATE OR REPLACE ALERT DM_LADDERS_QA.UTIL.S3_TASK_ALERT
 WAREHOUSE = COMPUTE_WH
 schedule='USING CRON 05 07 * * * America/New_York'
@@ -86,11 +103,28 @@ schedule='USING CRON 05 07 * * * America/New_York'
     'there are errors from util.task_log\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
 
+CREATE OR REPLACE ALERT DM_LADDERS_QA.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT
+WAREHOUSE = COMPUTE_WH
+schedule='USING CRON 10 07 * * * America/New_York'
+  IF (EXISTS(
+    select * from snowflake.account_usage.task_history where name='LADDERS_MAPPED_TABLE_TASK'
+        and database_name='DM_LADDERS_QA' and (error_code is not null or state='FAILED')
+        and DATE(query_start_time) > DATEADD(days, -1, sysdate())
+    ))        
+  THEN
+  CALL SYSTEM$SEND_EMAIL(
+    'email_int_obj',
+    'slu@dimagi.com, ush-devops@dimagi.com',
+    'Email Alert: DM_LADDERS_DEV LADDERS_MAPPED_TABLE_TASK_ALERT error.',
+    'there are errors from util.ladders_mapped_table_task_alert\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
+);  
+
 use role accountadmin;
 //drop alert DM_LADDERS_QA.UTIL.S3_TASK_ALERT;
-alter alert DM_LADDERS_QA.UTIL.S3_TASK_ALERT resume;
+alter alert DM_LADDERS_QA.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT resume;
 alter alert DM_LADDERS_QA.UTIL.S3_TASK_ALERT suspend;
 
+execute alert DM_LADDERS_QA.UTIL.S3_TASK_ALERT;
 show alerts; 
 
 // DM_LADDERS_PROD
@@ -98,7 +132,7 @@ show alerts;
 use role accountadmin;
 use database DM_LADDERS_PROD;
 use schema UTIL;
-
+/*
 CREATE OR REPLACE ALERT DM_LADDERS_PROD.UTIL.s3_int_alert
 WAREHOUSE = COMPUTE_WH
 schedule='USING CRON 00 07 * * * America/New_York'
@@ -112,7 +146,7 @@ schedule='USING CRON 00 07 * * * America/New_York'
     'Email Alert: DM_LADDERS_PROD sql_logs error.',
     'there are errors from util.sql_logs\n start_time='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
-
+*/
 CREATE OR REPLACE ALERT DM_LADDERS_PROD.UTIL.S3_TASK_ALERT
 WAREHOUSE = COMPUTE_WH
 schedule='USING CRON 05 07 * * * America/New_York'
@@ -127,11 +161,28 @@ schedule='USING CRON 05 07 * * * America/New_York'
     'there are errors from util.task_log\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
 
+CREATE OR REPLACE ALERT DM_LADDERS_PROD.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT
+WAREHOUSE = COMPUTE_WH
+schedule='USING CRON 10 07 * * * America/New_York'
+  IF (EXISTS(
+    select * from snowflake.account_usage.task_history where name='LADDERS_MAPPED_TABLE_TASK'
+        and database_name='DM_LADDERS_PROD' and (error_code is not null or state='FAILED')
+        and DATE(query_start_time) > DATEADD(days, -1, sysdate())
+    ))        
+  THEN
+  CALL SYSTEM$SEND_EMAIL(
+    'email_int_obj',
+    'slu@dimagi.com, ush-devops@dimagi.com',
+    'Email Alert: DM_LADDERS_DEV LADDERS_MAPPED_TABLE_TASK_ALERT error.',
+    'there are errors from util.ladders_mapped_table_task_alert\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
+); 
+
 use role accountadmin;
 //drop alert DM_LADDERS_PROD.UTIL.S3_TASK_ALERT;
-alter alert DM_LADDERS_PROD.UTIL.S3_TASK_ALERT resume;
+alter alert DM_LADDERS_PROD.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT resume;
 alter alert DM_LADDERS_PROD.UTIL.S3_TASK_ALERT suspend;
 
+execute alert DM_LADDERS_PROD.UTIL.S3_TASK_ALERT;
 show alerts; 
 
 
@@ -155,11 +206,28 @@ schedule='USING CRON 25 06 * * * America/New_York'
     'there are errors from util.task_log\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
 
+CREATE OR REPLACE ALERT DM_LADDERS_TEST_STAGING.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT
+WAREHOUSE = COMPUTE_WH
+schedule='USING CRON 30 06 * * * America/New_York'
+  IF (EXISTS(
+    select * from snowflake.account_usage.task_history where name='LADDERS_MAPPED_TABLE_TASK'
+        and database_name='DM_LADDERS_TEST_STAGING' and (error_code is not null or state='FAILED')
+        and DATE(query_start_time) > DATEADD(days, -1, sysdate())
+    ))        
+  THEN
+  CALL SYSTEM$SEND_EMAIL(
+    'email_int_obj',
+    'slu@dimagi.com, ush-devops@dimagi.com',
+    'Email Alert: DM_LADDERS_DEV LADDERS_MAPPED_TABLE_TASK_ALERT error.',
+    'there are errors from util.ladders_mapped_table_task_alert\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
+); 
+
 use role accountadmin;
 //drop alert DM_LADDERS_TEST_STAGING.UTIL.s3_int_alert;
-alter alert DM_LADDERS_TEST_STAGING.UTIL.S3_TASK_ALERT resume;
+alter alert DM_LADDERS_TEST_STAGING.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT resume;
 alter alert DM_LADDERS_TEST_STAGING.UTIL.S3_TASK_ALERT suspend;
 
+execute alert DM_LADDERS_TEST_STAGING.UTIL.S3_TASK_ALERT;
 show alerts; 
 
 
@@ -183,11 +251,28 @@ schedule='USING CRON 35 06 * * * America/New_York'
     'there are errors from util.task_log\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
 
+CREATE OR REPLACE ALERT DM_LADDERS_PERF.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT
+WAREHOUSE = COMPUTE_WH
+schedule='USING CRON 40 06 * * * America/New_York'
+  IF (EXISTS(
+    select * from snowflake.account_usage.task_history where name='LADDERS_MAPPED_TABLE_TASK'
+        and database_name='DM_LADDERS_PERF' and (error_code is not null or state='FAILED')
+        and DATE(query_start_time) > DATEADD(days, -1, sysdate())
+    ))        
+  THEN
+  CALL SYSTEM$SEND_EMAIL(
+    'email_int_obj',
+    'slu@dimagi.com, ush-devops@dimagi.com',
+    'Email Alert: DM_LADDERS_DEV LADDERS_MAPPED_TABLE_TASK_ALERT error.',
+    'there are errors from util.ladders_mapped_table_task_alert\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
+); 
+
 use role accountadmin;
 //drop alert DM_LADDERS_PERF.UTIL.s3_int_alert;
-alter alert DM_LADDERS_PERF.UTIL.S3_TASK_ALERT resume;
+alter alert DM_LADDERS_PERF.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT resume;
 alter alert DM_LADDERS_PERF.UTIL.S3_TASK_ALERT suspend;
 
+execute alert DM_LADDERS_PERF.UTIL.S3_TASK_ALERT;
 show alerts; 
 
 
@@ -211,11 +296,28 @@ schedule='USING CRON 35 05 * * * America/New_York'
     'there are errors from util.task_log\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
 );
 
+CREATE OR REPLACE ALERT DM_LADDERS_TEST.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT
+WAREHOUSE = COMPUTE_WH
+schedule='USING CRON 40 05 * * * America/New_York'
+  IF (EXISTS(
+    select * from snowflake.account_usage.task_history where name='LADDERS_MAPPED_TABLE_TASK'
+        and database_name='DM_LADDERS_TEST' and (error_code is not null or state='FAILED')
+        and DATE(query_start_time) > DATEADD(days, -1, sysdate())
+    ))        
+  THEN
+  CALL SYSTEM$SEND_EMAIL(
+    'email_int_obj',
+    'slu@dimagi.com, ush-devops@dimagi.com',
+    'Email Alert: DM_LADDERS_DEV LADDERS_MAPPED_TABLE_TASK_ALERT error.',
+    'there are errors from util.ladders_mapped_table_task_alert\n task_start='||DATE(CURRENT_DATE)||' greater than '||DATEADD(days, -1, CURRENT_DATE)
+); 
+
 use role accountadmin;
 //drop alert DM_LADDERS_TEST.UTIL.s3_int_alert;
-alter alert DM_LADDERS_TEST.UTIL.S3_TASK_ALERT resume;
+alter alert DM_LADDERS_TEST.UTIL.LADDERS_MAPPED_TABLE_TASK_ALERT resume;
 alter alert DM_LADDERS_TEST.UTIL.S3_TASK_ALERT suspend;
 
+execute alert DM_LADDERS_TEST.UTIL.S3_TASK_ALERT;
 show alerts; 
 
 
