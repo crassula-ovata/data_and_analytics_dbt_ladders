@@ -279,6 +279,8 @@ with payloads as (
                                         then '"account_name": ' || ifnull('"' || replace(replace(replace(account_name, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when action = 'create'
                                         then '"accepts_commcare_referrals": "no",' else '' end  ||
+                                    case when action = 'create'
+                                        then '"number_units": "1",' else '' end  ||
                                     --12/1: SL added for tile_header
                                     --12/4: BR removed/commented out tile_header. Will be added to Unit cases instead. 
                                     -- '"tile_header": "' || replace(replace(replace(tile_header::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || ',' ||
