@@ -1,6 +1,6 @@
 with 
 payloads as (
-    select * from VW_SITE_CODE_UPDATE  
+    select * from {{ ref('VW_SITE_CODE_UPDATE') }}
 )
 ,numbered_payloads as ( --add row numbers and groupings of 100 at a time
     select row_number() over(order by LOC_ID asc) rownum, ceil(rownum/100) grouping, payload payloads from payloads
