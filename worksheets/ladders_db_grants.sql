@@ -38,65 +38,89 @@ grant role dm_ladders_dev_dm_r to role user_tableau_oauth_bha;
 grant role dm_ladders_dev_util_r to role user_tableau_oauth_bha;
 -- end for role setup if needed --
 
+-- some additional ownership fixing if needed
+GRANT OWNERSHIP ON DATABASE dm_co_care_coord_perf TO ROLE sysadmin;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.DL TO ROLE sysadmin;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.DM TO ROLE sysadmin;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.INTEGRATION TO ROLE sysadmin;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.UTIL TO ROLE sysadmin;
+/*
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.DL TO ROLE sysadmin REVOKE CURRENT GRANTS;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.DM TO ROLE sysadmin REVOKE CURRENT GRANTS;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.INTEGRATION TO ROLE sysadmin REVOKE CURRENT GRANTS;
+GRANT OWNERSHIP ON schema dm_co_care_coord_dev.UTIL TO ROLE sysadmin REVOKE CURRENT GRANTS;
+*/
+GRANT OWNERSHIP ON ALL TABLES IN SCHEMA dm_co_care_coord_dev.DL TO ROLE sysadmin COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON ALL VIEWS IN SCHEMA dm_co_care_coord_dev.DL TO ROLE sysadmin COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON ALL TABLES IN SCHEMA dm_co_care_coord_dev.DM TO ROLE sysadmin COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON ALL VIEWS IN SCHEMA dm_co_care_coord_dev.DM TO ROLE sysadmin COPY CURRENT GRANTS;
+--GRANT OWNERSHIP ON ALL TABLES IN SCHEMA dm_co_care_coord_dev.INTEGRATION TO ROLE sysadmin COPY CURRENT GRANTS;
+--GRANT OWNERSHIP ON ALL VIEWS IN SCHEMA dm_co_care_coord_dev.INTEGRATION TO ROLE sysadmin COPY CURRENT GRANTS;
+GRANT OWNERSHIP ON ALL TABLES IN SCHEMA dm_co_care_coord_dev.UTIL TO ROLE sysadmin COPY CURRENT GRANTS;
+-- end of some additional fixing
 
 -- for exising replicated db --
 use role accountadmin;
+--share
+// the following command is used only when the db needs be shared weith beHealth
+grant USAGE ON DATABASE dm_co_care_coord_qa TO SHARE bha_uat_s;
+
 -- db
-grant usage on database dm_co_care_coord_test to role DM_CO_CARE_COORD_DEV_USAGE;
+grant usage on database dm_co_care_coord_perf to role DM_CO_CARE_COORD_DEV_USAGE;
 // for testing project
-grant usage on database dm_co_care_coord_test to role dm_ladders_test_rw;
+grant usage on database dm_co_care_coord_perf to role dm_ladders_test_rw;
 
 -- schema DL
-grant usage on schema dm_co_care_coord_test.DL to role DM_CO_CARE_COORD_DEV_DL_R;
-grant select on future tables in schema dm_co_care_coord_test.DL to role DM_CO_CARE_COORD_DEV_DL_R;
-grant select on future views in schema dm_co_care_coord_test.DL to role DM_CO_CARE_COORD_DEV_DL_R;
-grant select on all tables in schema dm_co_care_coord_test.DL to role DM_CO_CARE_COORD_DEV_DL_R;
-grant select on all views in schema dm_co_care_coord_test.DL to role DM_CO_CARE_COORD_DEV_DL_R;
+grant usage on schema dm_co_care_coord_perf.DL to role DM_CO_CARE_COORD_DEV_DL_R;
+grant select on future tables in schema dm_co_care_coord_perf.DL to role DM_CO_CARE_COORD_DEV_DL_R;
+grant select on future views in schema dm_co_care_coord_perf.DL to role DM_CO_CARE_COORD_DEV_DL_R;
+grant select on all tables in schema dm_co_care_coord_perf.DL to role DM_CO_CARE_COORD_DEV_DL_R;
+grant select on all views in schema dm_co_care_coord_perf.DL to role DM_CO_CARE_COORD_DEV_DL_R;
 // for testing project
-grant usage on schema dm_co_care_coord_test.DL to role dm_ladders_test_rw;
-grant select on future tables in schema dm_co_care_coord_test.DL to role dm_ladders_test_rw;
-grant select on future views in schema dm_co_care_coord_test.DL to role dm_ladders_test_rw;
-grant select on all tables in schema dm_co_care_coord_test.DL to role dm_ladders_test_rw;
-grant select on all views in schema dm_co_care_coord_test.DL to role dm_ladders_test_rw;
+grant usage on schema dm_co_care_coord_perf.DL to role dm_ladders_test_rw;
+grant select on future tables in schema dm_co_care_coord_perf.DL to role dm_ladders_test_rw;
+grant select on future views in schema dm_co_care_coord_perf.DL to role dm_ladders_test_rw;
+grant select on all tables in schema dm_co_care_coord_perf.DL to role dm_ladders_test_rw;
+grant select on all views in schema dm_co_care_coord_perf.DL to role dm_ladders_test_rw;
 
 -- schema DM
-grant usage on schema dm_co_care_coord_test.DM to role DM_CO_CARE_COORD_DEV_DM_R;
-grant select on future tables in schema dm_co_care_coord_test.DM to role DM_CO_CARE_COORD_DEV_DM_R;
-grant select on future views in schema dm_co_care_coord_test.DM to role DM_CO_CARE_COORD_DEV_DM_R;
-grant select on all tables in schema dm_co_care_coord_test.DM to role DM_CO_CARE_COORD_DEV_DM_R;
-grant select on all views in schema dm_co_care_coord_test.DM to role DM_CO_CARE_COORD_DEV_DM_R;
+grant usage on schema dm_co_care_coord_perf.DM to role DM_CO_CARE_COORD_DEV_DM_R;
+grant select on future tables in schema dm_co_care_coord_perf.DM to role DM_CO_CARE_COORD_DEV_DM_R;
+grant select on future views in schema dm_co_care_coord_perf.DM to role DM_CO_CARE_COORD_DEV_DM_R;
+grant select on all tables in schema dm_co_care_coord_perf.DM to role DM_CO_CARE_COORD_DEV_DM_R;
+grant select on all views in schema dm_co_care_coord_perf.DM to role DM_CO_CARE_COORD_DEV_DM_R;
 // for testing project
-grant usage on schema dm_co_care_coord_test.DM to role dm_ladders_test_rw;
-grant select on future tables in schema dm_co_care_coord_test.DM to role dm_ladders_test_rw;
-grant select on future views in schema dm_co_care_coord_test.DM to role dm_ladders_test_rw;
-grant select on all tables in schema dm_co_care_coord_test.DM to role dm_ladders_test_rw;
-grant select on all views in schema dm_co_care_coord_test.DM to role dm_ladders_test_rw;
+grant usage on schema dm_co_care_coord_perf.DM to role dm_ladders_test_rw;
+grant select on future tables in schema dm_co_care_coord_perf.DM to role dm_ladders_test_rw;
+grant select on future views in schema dm_co_care_coord_perf.DM to role dm_ladders_test_rw;
+grant select on all tables in schema dm_co_care_coord_perf.DM to role dm_ladders_test_rw;
+grant select on all views in schema dm_co_care_coord_perf.DM to role dm_ladders_test_rw;
 
 -- schema INTEGRATION
-grant usage on schema dm_co_care_coord_test.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
-grant select on future tables in schema dm_co_care_coord_test.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
-grant select on future views in schema dm_co_care_coord_test.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
-grant select on all tables in schema dm_co_care_coord_test.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
-grant select on all views in schema dm_co_care_coord_test.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
+grant usage on schema dm_co_care_coord_perf.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
+grant select on future tables in schema dm_co_care_coord_perf.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
+grant select on future views in schema dm_co_care_coord_perf.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
+grant select on all tables in schema dm_co_care_coord_perf.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
+grant select on all views in schema dm_co_care_coord_perf.integration to role DM_CO_CARE_COORD_DEV_INTEGRATION_R;
 // for testing project
-grant usage on schema dm_co_care_coord_test.integration to role dm_ladders_test_rw;
-grant select on future tables in schema dm_co_care_coord_test.integration to role dm_ladders_test_rw;
-grant select on future views in schema dm_co_care_coord_test.integration to role dm_ladders_test_rw;
-grant select on all tables in schema dm_co_care_coord_test.integration to role dm_ladders_test_rw;
-grant select on all views in schema dm_co_care_coord_test.integration to role dm_ladders_test_rw;
+grant usage on schema dm_co_care_coord_perf.integration to role dm_ladders_test_rw;
+grant select on future tables in schema dm_co_care_coord_perf.integration to role dm_ladders_test_rw;
+grant select on future views in schema dm_co_care_coord_perf.integration to role dm_ladders_test_rw;
+grant select on all tables in schema dm_co_care_coord_perf.integration to role dm_ladders_test_rw;
+grant select on all views in schema dm_co_care_coord_perf.integration to role dm_ladders_test_rw;
 
 -- schema UTIL
-grant usage on schema dm_co_care_coord_test.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
-grant select on future tables in schema dm_co_care_coord_test.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
-grant select on future views in schema dm_co_care_coord_test.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
-grant select on all tables in schema dm_co_care_coord_test.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
-grant select on all views in schema dm_co_care_coord_test.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
+grant usage on schema dm_co_care_coord_perf.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
+grant select on future tables in schema dm_co_care_coord_perf.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
+grant select on future views in schema dm_co_care_coord_perf.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
+grant select on all tables in schema dm_co_care_coord_perf.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
+grant select on all views in schema dm_co_care_coord_perf.UTIL to role DM_CO_CARE_COORD_DEV_UTIL_R;
 // for testing project
-grant usage on schema dm_co_care_coord_test.UTIL to role dm_ladders_test_rw;
-grant select on future tables in schema dm_co_care_coord_test.UTIL to role dm_ladders_test_rw;
-grant select on future views in schema dm_co_care_coord_test.UTIL to role dm_ladders_test_rw;
-grant select on all tables in schema dm_co_care_coord_test.UTIL to role dm_ladders_test_rw;
-grant select on all views in schema dm_co_care_coord_test.UTIL to role dm_ladders_test_rw;
+grant usage on schema dm_co_care_coord_perf.UTIL to role dm_ladders_test_rw;
+grant select on future tables in schema dm_co_care_coord_perf.UTIL to role dm_ladders_test_rw;
+grant select on future views in schema dm_co_care_coord_perf.UTIL to role dm_ladders_test_rw;
+grant select on all tables in schema dm_co_care_coord_perf.UTIL to role dm_ladders_test_rw;
+grant select on all views in schema dm_co_care_coord_perf.UTIL to role dm_ladders_test_rw;
 -- end for exising replicated db --
 
 
