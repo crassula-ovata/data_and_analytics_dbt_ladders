@@ -103,7 +103,7 @@ c_share as (
         case when  startswith(trim(substr(phone, 15), ' '), '/') then replace(trim(substr(phone, 15), ' '), '/', '')
              else trim(substr(phone, 15), ' ')  end as phone_details,
         iff(phone = '', null, '1' || substr(regexp_replace(phone, '[^a-zA-Z0-9]'), 1,10)) as phone_number, iff(phone = '', null,  concat('(', substr(regexp_replace(phone, '[^a-zA-Z0-9]'), 1,3), ') ', substr(regexp_replace(phone, '[^a-zA-Z0-9]'),  4,3), '-', substr(regexp_replace(phone, '[^a-zA-Z0-9]'), 7,4) )) as phone_display, 
-        opioid_treatment_programs as opioid_treatment_provider,
+        ifnull(opioid_treatment_programs, false) as opioid_treatment_provider,
         residential_child_care_facility,
         hospital,
         community_mental_health_center,
@@ -207,7 +207,7 @@ c_share as (
         case
           when startswith(upper(website), 'HTTP://') or startswith(upper(website), 'HTTPS://') THEN website
           when startswith(upper(website), 'WWW.') then 'https://' || website
-          else 'https://www.' || website
+          else 'https://www.' ||  nullif(trim(website), '')
         end as website,
         -- replace(regexp_replace(replace(regexp_replace(lower(population_served),  ';\\s', ';'), '+', ''), '[^a-zA-Z0-9;]', '_'), ';', ' ') as population_served,
         -- 6/21: BR updated to map youth-> minors_adolescents and only keep one if both youth and minor/adolescets exist

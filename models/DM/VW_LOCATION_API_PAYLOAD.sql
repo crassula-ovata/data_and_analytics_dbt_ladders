@@ -131,10 +131,7 @@ fac_payloads as (
                 and fac.location_type_code = 'facility'
     where (fac.location_id is null or (fac.name != ld.new_provider_directory_display_name or locs.location_id != fac.parent_location_id
             or fac.latitude::number(10,7) != ld.new_latitude::number(10,7) or fac.longitude::number(10,7) != ld.new_longitude::number(10,7)))
-        and locs.location_id is not null
-        -- temporary changes to skip account name = [LEGACY ACCOUNT] Colorado Mental Health Institute - General Account
-        and account_name <> 'Atlas Counseling & Consulting, PLLC'
-        -- end temporary        
+        and locs.location_id is not null      
 ),
 fac_data_payloads as (
     SELECT distinct
