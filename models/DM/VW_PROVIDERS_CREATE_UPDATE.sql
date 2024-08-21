@@ -14,7 +14,7 @@ p_share as (
         distinct
         dm.external_id_format (parent_account_id) as parent_account_id,
         bha_general_acct ,
-        case when legacy_parent_account_id <> parent_account_id then 'yes' end as bhe_updated,
+        case when nvl(legacy_parent_account_id, '') <> parent_account_id then 'yes' end as bhe_updated,
     from hades_table_data_ladders_active_licenses
  --   where parent_account_id = '0014m_00001hh_zzl_q_a_s_'
         order by BHA_GENERAL_ACCT asc
