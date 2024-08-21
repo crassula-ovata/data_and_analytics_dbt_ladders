@@ -280,6 +280,8 @@ with payloads as (
                                         then '"gender": ' || ifnull('"' || replace(replace(replace(gender, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when account_name_action is not null or action = 'create' and account_name is not null
                                         then '"account_name": ' || ifnull('"' || replace(replace(replace(account_name, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
+                                    case when bhe_updated_action is not null or action = 'create' and bhe_updated is not null
+                                        then '"bhe_updated": ' || ifnull('"' || replace(replace(replace(bhe_updated, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when action = 'create'
                                         then '"accepts_commcare_referrals": "no",' else '' end  ||
                                     case when action = 'create'
