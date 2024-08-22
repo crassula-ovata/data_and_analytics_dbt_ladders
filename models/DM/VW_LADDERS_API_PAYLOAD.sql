@@ -80,46 +80,7 @@ with payloads as (
             '"gender_display": ' || '"' || gender_display ||  '",'  ||
             '"acuity_display": ' || '"' || acuity_display ||  '"'  ||
                  ' } }') payload 
-    from VW_CAPACITY_TEMPLATE_CREATE
-    union 
-    select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
-        CASE_TYPE, 
-        parse_json(
-'{ "create": false' || ', ' ||  
-            case when nullif(CASE_ID,'') is null then '"external_id": ' else '"case_id": ' end || 
-            case when nullif(CASE_ID,'') is null then '"' || 
-            replace(replace(replace(EXTERNAL_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' else '"' || replace(replace(replace(CASE_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' end || 
-            '"case_type": ' || '"' || 
-            replace(replace(replace(CASE_TYPE, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' || 
-            '"owner_id": ' || '"' || 
-            replace(replace(replace(OWNER_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' ||
-            '"indices": ' || 
-            '{ "parent": {' || 
-                            case when nullif(PARENT_CASE_ID,'') is null then '"external_id": ' else '"case_id": ' end ||
-                            case when nullif(PARENT_CASE_ID,'') is null then '"' || replace(replace(replace(EXTERNAL_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' else '"' || replace(replace(replace(PARENT_CASE_ID, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' end ||
-                            '"case_type": ' || '"' || replace(replace(replace(PARENT_CASE_TYPE, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '", ' ||
-                            '"relationship": ' || '"' || replace(replace(replace(PARENT_RELATIONSHIP, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '" } },' ||
-            trim(
-            '"properties": {' ||
-            case when nullif(map_coordinates,'') is not null 
-                    then '"map_coordinates": ' || '"' ||
-                    REPLACE(REPLACE(REPLACE(map_coordinates, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || ',' else '' end ||
-            case when nullif(clinic_display_name,'') is not null 
-                    then '"clinic_display_name": ' || ifnull('"' || replace(replace(replace(clinic_display_name, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
-            case when nullif(clinic_phone_display,'') is not null 
-                    then '"clinic_phone_display": ' || ifnull('"' || replace(replace(replace(clinic_phone_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
-            case when nullif(clinic_address_full_display,'') is not null 
-                    then '"clinic_address_full_display": ' || ifnull('"' || replace(replace(replace(clinic_address_full_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
-            case when nullif(clinic_mental_health_settings_display,'') is not null 
-                    then '"clinic_mental_health_settings_display": ' || ifnull('"' || replace(replace(replace(clinic_mental_health_settings_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
-            case when nullif(map_popup,'') is not null 
-                    then '"map_popup": ' || ifnull('"' || replace(replace(replace(map_popup, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end || 
-            case when nullif(clinic_insurance_display,'') is not null 
-                    then '"clinic_insurance_display": ' || ifnull('"' || replace(replace(replace(clinic_insurance_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end 
-                    
-               , ',' )    -- rtrim trailing comma from the key properties' values
-                || ' } }') payload 
-    from VW_UNIT_UPDATE
+    from VW_CAPACITY_TEMPLATE_CREATE        
     union
     select case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
         CASE_TYPE,
@@ -167,7 +128,10 @@ with payloads as (
                                 '"properties": ' ||
                                 '{ "import_date": ' || '"' || replace(replace(replace(IMPORT_DATE::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || 
                                 case when UPDATE_OTP_ACTION is not null or action = 'create' 
-                                        then ', "opioid_treatment_provider": "' || replace(replace(replace(OPIOID_TREATMENT_PROVIDER, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '",' else '' end || ' } }'
+                                        then ', "opioid_treatment_provider": "' || replace(replace(replace(OPIOID_TREATMENT_PROVIDER, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '",' else '' end || 
+                                case when UPDATE_BHE_ACTION is not null or action = 'create'
+                                    then ', "bhe_updated": "' || replace(replace(replace(BHE_UPDATED, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '",' else '' end ||
+                                ' } }'
                                ) payload
     from VW_PROVIDERS_CREATE_UPDATE
     union
@@ -316,8 +280,12 @@ with payloads as (
                                         then '"gender": ' || ifnull('"' || replace(replace(replace(gender, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when account_name_action is not null or action = 'create' and account_name is not null
                                         then '"account_name": ' || ifnull('"' || replace(replace(replace(account_name, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
+                                    case when bhe_updated_action is not null or action = 'create' and bhe_updated is not null
+                                        then '"bhe_updated": ' || ifnull('"' || replace(replace(replace(bhe_updated, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""') || ',' else '' end ||
                                     case when action = 'create'
                                         then '"accepts_commcare_referrals": "no",' else '' end  ||
+                                    case when action = 'create'
+                                        then '"number_units": "1",' else '' end  ||
                                     --12/1: SL added for tile_header
                                     --12/4: BR removed/commented out tile_header. Will be added to Unit cases instead. 
                                     -- '"tile_header": "' || replace(replace(replace(tile_header::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || ',' ||
