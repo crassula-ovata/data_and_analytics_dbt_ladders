@@ -936,7 +936,7 @@ select
         end as map_popup_action,
 		case 
 		when c_prod.external_id is not null and nvl(c_prod.owner_id, '') <> nvl(locs.location_id, '') then 'owner' else null
-		end as owner_action,,
+		end as owner_action,
         case 
 		when c_prod.external_id is not null and nvl(c_prod.bhe_updated::string, '') <> nvl(c_share_union.bhe_updated::string, '') then 'bhe_updated' else null
 		end as bhe_updated_action,
