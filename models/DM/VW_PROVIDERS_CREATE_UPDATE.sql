@@ -81,6 +81,7 @@ p_share_union as (
         null as update_name_action, 
         null as update_otp_action,
         null as update_owner_action,
+        case when nvl(p_share.bhe_updated, '') <> '' then 'update_bhe' else null end as update_bhe_action,
         case when p_prod.external_id is null then 'create' else null end as action,
     current_timestamp() as import_date
     from p_share left join p_prod on p_share.parent_account_id = p_prod.external_id 

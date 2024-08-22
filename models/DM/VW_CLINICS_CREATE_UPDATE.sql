@@ -564,7 +564,7 @@ select external_id, display_name, phone_display, address_full, insurance, referr
 	, ACTIVE_SUD_LICENSE
 	, ACTIVE_MH_DESIGNATION
 	,null as ACTIVE_RSSO_LICENSE,
-    BHE UPDATED
+    BHE_UPDATED
 	from c_prod
 )
 , c_share_union as (
@@ -1190,7 +1190,7 @@ order by action,ladders_external_id, c_prod.date_opened, c_share_union.case_name
 	MAP_COORDINATES_ACTION,
 	MAP_POPUP_ACTION,
     OWNER_ACTION,
-    BHE_UPDATED,
+    BHE_UPDATED_ACTION,
 	ACTION,
 	IMPORT_DATE
 from final
