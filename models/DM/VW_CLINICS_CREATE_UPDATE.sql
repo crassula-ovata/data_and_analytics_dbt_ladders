@@ -47,6 +47,7 @@ c_prod as (
             -- KC: end of new properties.
             -- 8/20/23 additional 2 fields for map_popup
             referral_type,
+            bhe_updated,
             map_popup,
             -- 12/1 for tile_header | 12/4 BR: commented out tile_header related
             -- exclusions,
@@ -339,7 +340,8 @@ c_share as (
         -- properties used to calculate service_types_list and the new field service_types
         ACTIVE_SUD_LICENSE,
         ACTIVE_MH_DESIGNATION,
-        ACTIVE_RSSO_LICENSE
+        ACTIVE_RSSO_LICENSE,
+        CASE WHEN nvl(legacy_account_id, '') <> account_id THEN 'yes' ELSE null end as bhe_updated
         
     from hades_table_data_ladders_active_licenses 
     order by case_name
@@ -561,7 +563,8 @@ select external_id, display_name, phone_display, address_full, insurance, referr
 	,null as ALCOHOL_DRUG_INVOLUNTARY_COMMITMENT
 	, ACTIVE_SUD_LICENSE
 	, ACTIVE_MH_DESIGNATION
-	,null as ACTIVE_RSSO_LICENSE
+	,null as ACTIVE_RSSO_LICENSE,
+    BHE_UPDATED
 	from c_prod
 )
 , c_share_union as (
@@ -657,6 +660,7 @@ select
         -- 6/15 BR update for map_coordinates
         iff(c_share_union.map_coordinates = '', null, c_share_union.map_coordinates) as map_coordinates,
         iff(map_popup_cte.map_popup = '', null, map_popup_cte.map_popup) as map_popup,
+        c_share_union.bhe_updated as bhe_updated,
         case 
             when c_share_union.hide_address = 'TRUE' then 'yes' 
             when c_share_union.hide_address = 'FALSE' then 'no'
@@ -934,6 +938,9 @@ select
 		when c_prod.external_id is not null and nvl(c_prod.owner_id, '') <> nvl(locs.location_id, '') then 'owner' else null
 		end as owner_action,
         case 
+		when c_prod.external_id is not null and nvl(c_prod.bhe_updated::string, '') <> nvl(c_share_union.bhe_updated::string, '') then 'bhe_updated' else null
+		end as bhe_updated_action,
+        case 
         when c_prod.external_id is not null and (
                  case_name_action is not null 
                   or display_name_action is not null
@@ -1006,6 +1013,7 @@ select
                   -- or 
                   -- map_popup_action is not null
                   or owner_action is not null
+                  or bhe_updated_action is not null
                   ) then 'update' 
         when c_prod.external_id is null and c_share_union.ladders_external_id is not null then 'create'
         else null end as action,
@@ -1114,6 +1122,7 @@ order by action,ladders_external_id, c_prod.date_opened, c_share_union.case_name
 	MEDICALLY_MONITORED_INTENSE_RES_TRTMT,
 	CLINIC_MANAGED_RESIDENTIAL_DETOX,
 	MED_MONITORED_INPATIENT_DETOX,
+    BHE_UPDATED,
 	CASE_NAME_ACTION,
 	DISPLAY_NAME_ACTION,
     ACCOUNT_NAME_ACTION,
@@ -1181,6 +1190,7 @@ order by action,ladders_external_id, c_prod.date_opened, c_share_union.case_name
 	MAP_COORDINATES_ACTION,
 	MAP_POPUP_ACTION,
     OWNER_ACTION,
+    BHE_UPDATED_ACTION,
 	ACTION,
 	IMPORT_DATE
 from final

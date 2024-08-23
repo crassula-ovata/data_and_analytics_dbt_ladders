@@ -13,7 +13,8 @@ p_share as (
     select 
         distinct
         dm.external_id_format (parent_account_id) as parent_account_id,
-        bha_general_acct 
+        bha_general_acct ,
+        case when nvl(legacy_parent_account_id, '') <> parent_account_id then 'yes' end as bhe_updated,
     from hades_table_data_ladders_active_licenses
  --   where parent_account_id = '0014m_00001hh_zzl_q_a_s_'
         order by BHA_GENERAL_ACCT asc
@@ -40,6 +41,7 @@ p_prod as (
         owner_id,
         date_opened, 
         case_name,
+        bhe_updated,
         rank () over ( partition by external_id order by date_opened asc ) as date_rank_p,
         opioid_treatment_provider
         
@@ -50,9 +52,9 @@ p_prod as (
 p_share_union as (
 	select * 
 	from (
-		select parent_account_id, bha_general_acct, 1 as priority from p_share
+		select parent_account_id, bha_general_acct, bhe_updated, 1 as priority from p_share
 		union
-		select external_id parent_account_id, case_name bha_general_acct, 2 as priority from p_prod
+		select external_id parent_account_id, case_name bha_general_acct, bhe_updated, 2 as priority from p_prod
 	)
 	qualify row_number() over (partition by parent_account_id order by priority asc) = 1
 )
@@ -75,9 +77,11 @@ p_share_union as (
         'provider' as case_type,
         p_share.bha_general_acct as case_name,
         p_share_otp.opioid_treatment_provider,
+        p_share.bhe_updated as bhe_updated, 
         null as update_name_action, 
         null as update_otp_action,
         null as update_owner_action,
+        case when nvl(p_share.bhe_updated, '') <> '' then 'update_bhe' else null end as update_bhe_action,
         case when p_prod.external_id is null then 'create' else null end as action,
     current_timestamp() as import_date
     from p_share left join p_prod on p_share.parent_account_id = p_prod.external_id 
@@ -104,7 +108,10 @@ updated_providers as (
             'update_otp', null) as otp_action,
         iff(p_share_union.parent_account_id = p_prod.external_id and 
             nvl(p_prod.owner_id,'') <> nvl(locs.location_id, ''), 'update_owner', null) as owner_action,
-        iff(name_action = 'update_name' or otp_action = 'update_otp' or owner_action = 'update_owner', 'update', null) as action,
+        p_share_union.bhe_updated as bhe_updated,
+        iff(p_share_union.parent_account_id = p_prod.external_id and 
+         nvl(p_share_union.bhe_updated::string, '') <> nvl(p_prod.bhe_updated::string, ''), 'update_bhe', null) as bhe_updated_action,
+        iff(name_action = 'update_name' or otp_action = 'update_otp' or owner_action = 'update_owner' or bhe_updated_action = 'update_bhe', 'update', null) as action,
     current_timestamp() as import_date
     from p_share_union left join p_prod on  p_share_union.parent_account_id = p_prod.external_id
                  left join p_share_union_otp on p_share_union_otp.parent_account_id = p_share_union.parent_account_id
@@ -118,15 +125,17 @@ select * from (select n_date_opened,case_id, external_id, owner_id, case_type, c
                case opioid_treatment_provider
                 when TRUE then 'yes'
                 when FALSE then 'no'
-               else null end as opioid_treatment_provider, 
-               update_name_action, update_otp_action, update_owner_action, action, import_date 
+               else null end as opioid_treatment_provider,
+               bhe_updated, 
+               update_name_action, update_otp_action, update_owner_action, update_bhe_action, action, import_date 
                from new_providers 
                union 
                select u_date_opened,case_id, external_id, owner_id, case_type, case_name,
                case opioid_treatment_provider
                 when TRUE then 'yes'
                 when FALSE then 'no'
-               else null end as opioid_treatment_provider, name_action, otp_action, owner_action, action, import_date
+               else null end as opioid_treatment_provider,
+                bhe_updated, name_action, otp_action, owner_action, bhe_updated_action, action, import_date
                from updated_providers)
 
 order by action, external_id
@@ -140,6 +149,8 @@ select
 	CASE_TYPE,
 	CASE_NAME,
 	OPIOID_TREATMENT_PROVIDER,
+    BHE_UPDATED,
+    UPDATE_BHE_ACTION,
 	UPDATE_NAME_ACTION,
 	UPDATE_OTP_ACTION,
     UPDATE_OWNER_ACTION,
