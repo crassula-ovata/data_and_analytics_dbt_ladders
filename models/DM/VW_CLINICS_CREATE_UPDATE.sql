@@ -625,7 +625,7 @@ select
         iff(c_share_union.language_services is null, '', c_share_union.language_services) as language_services,
         iff(c_share_union.npi is null, '', c_share_union.npi) as npi,
         iff(c_share_union.monday_hours is null, '', c_share_union.monday_hours) as monday_hours,
-        iff(c_share_union.monday_open is null, ''l, c_share_union.monday_open) as monday_open,
+        iff(c_share_union.monday_open is null, '', c_share_union.monday_open) as monday_open,
         iff(c_share_union.monday_close is null, '', c_share_union.monday_close) as monday_close,
         iff(c_share_union.tuesday_hours is null, '', c_share_union.tuesday_hours) as tuesday_hours,
         iff(c_share_union.tuesday_open is null, '', c_share_union.tuesday_open) as tuesday_open,
