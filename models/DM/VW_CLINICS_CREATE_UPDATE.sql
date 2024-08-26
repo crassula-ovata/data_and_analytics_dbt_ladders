@@ -608,7 +608,7 @@ select
         iff(c_share_union.phone_display is null, '', c_share_union.phone_display) as phone_display,
         --5/28 sprint D: BR include new fields
         c_share_union.original_licensure_date as original_licensure_date,
-        iff(c_share_union.sud_license_number =is null, '', c_share_union.sud_license_number) as sud_license_number,
+        iff(c_share_union.sud_license_number is null, '', c_share_union.sud_license_number) as sud_license_number,
         iff(c_share_union.cs_license_number is null, '', c_share_union.cs_license_number) as cs_license_number,
         iff(c_share_union.mh_designation is null, '', c_share_union.mh_designation) as mh_designation,
         iff(c_share_union.rsso_license_number is null, '', c_share_union.rsso_license_number) as rsso_license_number,
@@ -642,7 +642,7 @@ select
         iff(c_share_union.saturday_hours is null, '', c_share_union.saturday_hours) as saturday_hours,
         iff(c_share_union.saturday_open is null, '', c_share_union.saturday_open) as saturday_open,
         iff(c_share_union.saturday_close is null, '', c_share_union.saturday_close) as saturday_close,
-        iff(c_share_union.sunday_hoursis null, '', c_share_union.sunday_hours) as sunday_hours,
+        iff(c_share_union.sunday_hours is null, '', c_share_union.sunday_hours) as sunday_hours,
         iff(c_share_union.sunday_open is null, '', c_share_union.sunday_open) as sunday_open,
         iff(c_share_union.sunday_close is null, '', c_share_union.sunday_close) as sunday_close,
         iff(c_share_union.circle_program is null, '', c_share_union.circle_program) as circle_program,
