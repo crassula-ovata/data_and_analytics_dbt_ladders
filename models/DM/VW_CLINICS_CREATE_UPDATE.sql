@@ -47,7 +47,7 @@ c_prod as (
             -- KC: end of new properties.
             -- 8/20/23 additional 2 fields for map_popup
             referral_type,
-            bhe_updated,
+            case when bhe_updated = TRUE then 'yes' else null end as bhe_updated,
             map_popup,
             -- 12/1 for tile_header | 12/4 BR: commented out tile_header related
             -- exclusions,

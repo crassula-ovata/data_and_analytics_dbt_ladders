@@ -41,7 +41,9 @@ p_prod as (
         owner_id,
         date_opened, 
         case_name,
-        bhe_updated,
+        case bhe_updated 
+            when TRUE then 'yes'
+        else null end as bhe_updated,
         rank () over ( partition by external_id order by date_opened asc ) as date_rank_p,
         opioid_treatment_provider
         
