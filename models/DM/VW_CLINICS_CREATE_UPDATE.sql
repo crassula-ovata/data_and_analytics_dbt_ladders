@@ -47,6 +47,7 @@ c_prod as (
             -- KC: end of new properties.
             -- 8/20/23 additional 2 fields for map_popup
             referral_type,
+            case when bhe_updated = TRUE then 'yes' else null end as bhe_updated,
             map_popup,
             -- 12/1 for tile_header | 12/4 BR: commented out tile_header related
             -- exclusions,
@@ -339,7 +340,8 @@ c_share as (
         -- properties used to calculate service_types_list and the new field service_types
         ACTIVE_SUD_LICENSE,
         ACTIVE_MH_DESIGNATION,
-        ACTIVE_RSSO_LICENSE
+        ACTIVE_RSSO_LICENSE,
+        CASE WHEN nvl(legacy_account_id, '') <> account_id THEN 'yes' ELSE null end as bhe_updated
         
     from hades_table_data_ladders_active_licenses 
     order by case_name
@@ -561,7 +563,8 @@ select external_id, display_name, phone_display, address_full, insurance, referr
 	,null as ALCOHOL_DRUG_INVOLUNTARY_COMMITMENT
 	, ACTIVE_SUD_LICENSE
 	, ACTIVE_MH_DESIGNATION
-	,null as ACTIVE_RSSO_LICENSE
+	,null as ACTIVE_RSSO_LICENSE,
+    BHE_UPDATED
 	from c_prod
 )
 , c_share_union as (
@@ -593,70 +596,71 @@ select
         iff(c_share_union.display_name ='', null, c_share_union.display_name) as display_name,
         iff(c_share_union.account_name ='', null, c_share_union.account_name) as account_name,
         -- 4/10: Include county check
-        iff(c_share_union.county = '', null, c_share_union.county) as county,
-        iff(c_share_union.address_city = '', null, c_share_union.address_city) as address_city,
-        iff(c_share_union.address_full = '', null, c_share_union.address_full) as address_full,
-        iff(c_share_union.address_state = '', null, c_share_union.address_state) as address_state,
-        iff(c_share_union.address_street = '', null, c_share_union.address_street) as address_street,
-        iff(c_share_union.address_zip = '', null, c_share_union.address_zip) as address_zip,    
-        iff(clinic_type.clinic_type = '', null, clinic_type.clinic_type) as clinic_type,
-        iff(c_share_union.phone = '', null, c_share_union.phone) as phone,
-        iff(c_share_union.phone_details = '', null, c_share_union.phone_details) as phone_details,
-        iff(c_share_union.phone_display = '', null, c_share_union.phone_display) as phone_display,
+        iff(c_share_union.county is null, '', c_share_union.county) as county,
+        iff(c_share_union.address_city is null, '', c_share_union.address_city) as address_city,
+        iff(c_share_union.address_full is null, '', c_share_union.address_full) as address_full,
+        iff(c_share_union.address_state is null, '', c_share_union.address_state) as address_state,
+        iff(c_share_union.address_street is null, '', c_share_union.address_street) as address_street,
+        iff(c_share_union.address_zip is null, '', c_share_union.address_zip) as address_zip,    
+        iff(clinic_type.clinic_type is null, '', clinic_type.clinic_type) as clinic_type,
+        iff(c_share_union.phone is null, '', c_share_union.phone) as phone,
+        iff(c_share_union.phone_details is null, '', c_share_union.phone_details) as phone_details,
+        iff(c_share_union.phone_display is null, '', c_share_union.phone_display) as phone_display,
         --5/28 sprint D: BR include new fields
         c_share_union.original_licensure_date as original_licensure_date,
-        iff(c_share_union.sud_license_number = '', null, c_share_union.sud_license_number) as sud_license_number,
-        iff(c_share_union.cs_license_number = '', null, c_share_union.cs_license_number) as cs_license_number,
-        iff(c_share_union.mh_designation = '', null, c_share_union.mh_designation) as mh_designation,
-        iff(c_share_union.rsso_license_number = '', null, c_share_union.rsso_license_number) as rsso_license_number,
-        iff(c_share_union.offers_telehealth = '', null, c_share_union.offers_telehealth) as offers_telehealth,
-        iff(length(iff(c_share_union.fax_number = '', null, c_share_union.fax_number)) >=10, c_share_union.fax_number, null) as fax_number,
-        iff(length(iff(c_share_union.tdd_tty = '', null, c_share_union.tdd_tty)) >=10, c_share_union.tdd_tty, null) as tdd_tty_calc,
-        iff(length(iff(c_share_union.tdd_tty = '', null, c_share_union.tdd_tty)) >=10, c_share_union.tdd_tty, null) as tdd_tty,
-        iff(c_share_union.provider_location_display_label = '', null, c_share_union.provider_location_display_label) as provider_location_display_label,
-        iff(c_share_union.website = '', null, c_share_union.website) as website,
-        iff(c_share_union.population_served = '', null, c_share_union.population_served) as population_served,
-        iff(c_share_union.gender = '', null, c_share_union.gender) as gender,
-        iff(c_share_union.accessibility = '', null, c_share_union.accessibility) as accessibility,
-        iff(c_share_union.insurance = '', null, c_share_union.insurance) as insurance,
-        iff(c_share_union.language_services = '', null, c_share_union.language_services) as language_services,
-        iff(c_share_union.npi = '', null, c_share_union.npi) as npi,
-        iff(c_share_union.monday_hours = '', null, c_share_union.monday_hours) as monday_hours,
-        iff(c_share_union.monday_open = '', null, c_share_union.monday_open) as monday_open,
-        iff(c_share_union.monday_close = '', null, c_share_union.monday_close) as monday_close,
-        iff(c_share_union.tuesday_hours = '', null, c_share_union.tuesday_hours) as tuesday_hours,
-        iff(c_share_union.tuesday_open = '', null, c_share_union.tuesday_open) as tuesday_open,
-        iff(c_share_union.tuesday_close = '', null, c_share_union.tuesday_close) as tuesday_close,
-        iff(c_share_union.wednesday_hours = '', null, c_share_union.wednesday_hours) as wednesday_hours,
-        iff(c_share_union.wednesday_open = '', null, c_share_union.wednesday_open) as wednesday_open,
-        iff(c_share_union.wednesday_close = '', null, c_share_union.wednesday_close) as wednesday_close,
-        iff(c_share_union.thursday_hours = '', null, c_share_union.thursday_hours) as thursday_hours,
-        iff(c_share_union.thursday_open = '', null, c_share_union.thursday_open) as thursday_open,
-        iff(c_share_union.thursday_close = '', null, c_share_union.thursday_close) as thursday_close, 
-        iff(c_share_union.friday_hours = '', null, c_share_union.friday_hours) as friday_hours,
-        iff(c_share_union.friday_open = '', null, c_share_union.friday_open) as friday_open,
-        iff(c_share_union.friday_close = '', null, c_share_union.friday_close) as friday_close,
-        iff(c_share_union.saturday_hours = '', null, c_share_union.saturday_hours) as saturday_hours,
-        iff(c_share_union.saturday_open = '', null, c_share_union.saturday_open) as saturday_open,
-        iff(c_share_union.saturday_close = '', null, c_share_union.saturday_close) as saturday_close,
-        iff(c_share_union.sunday_hours = '', null, c_share_union.sunday_hours) as sunday_hours,
-        iff(c_share_union.sunday_open = '', null, c_share_union.sunday_open) as sunday_open,
-        iff(c_share_union.sunday_close = '', null, c_share_union.sunday_close) as sunday_close,
-        iff(c_share_union.circle_program = '', null, c_share_union.circle_program) as circle_program,
-        iff(c_share_union.mso_affiliation = '', null, c_share_union.mso_affiliation) as mso_affiliation,
-        iff(c_share_union.rae = '', null, c_share_union.rae) as rae,
-        iff(c_share_union.aso = '', null, c_share_union.aso) as aso,
+        iff(c_share_union.sud_license_number is null, '', c_share_union.sud_license_number) as sud_license_number,
+        iff(c_share_union.cs_license_number is null, '', c_share_union.cs_license_number) as cs_license_number,
+        iff(c_share_union.mh_designation is null, '', c_share_union.mh_designation) as mh_designation,
+        iff(c_share_union.rsso_license_number is null, '', c_share_union.rsso_license_number) as rsso_license_number,
+        iff(c_share_union.offers_telehealth is null, '', c_share_union.offers_telehealth) as offers_telehealth,
+        iff(length(iff(c_share_union.fax_number is null, '', c_share_union.fax_number)) >=10, c_share_union.fax_number, null) as fax_number,
+        iff(length(iff(c_share_union.tdd_tty is null, '', c_share_union.tdd_tty)) >=10, c_share_union.tdd_tty, null) as tdd_tty_calc,
+        iff(length(iff(c_share_union.tdd_tty is null, '', c_share_union.tdd_tty)) >=10, c_share_union.tdd_tty, null) as tdd_tty,
+        iff(c_share_union.provider_location_display_label is null, '', c_share_union.provider_location_display_label) as provider_location_display_label,
+        iff(c_share_union.website is null, '', c_share_union.website) as website,
+        iff(c_share_union.population_served is null, '', c_share_union.population_served) as population_served,
+        iff(c_share_union.gender is null, '', c_share_union.gender) as gender,
+        iff(c_share_union.accessibility is null, '', c_share_union.accessibility) as accessibility,
+        iff(c_share_union.insurance is null, '', c_share_union.insurance) as insurance,
+        iff(c_share_union.language_services is null, '', c_share_union.language_services) as language_services,
+        iff(c_share_union.npi is null, '', c_share_union.npi) as npi,
+        iff(c_share_union.monday_hours is null, '', c_share_union.monday_hours) as monday_hours,
+        iff(c_share_union.monday_open is null, '', c_share_union.monday_open) as monday_open,
+        iff(c_share_union.monday_close is null, '', c_share_union.monday_close) as monday_close,
+        iff(c_share_union.tuesday_hours is null, '', c_share_union.tuesday_hours) as tuesday_hours,
+        iff(c_share_union.tuesday_open is null, '', c_share_union.tuesday_open) as tuesday_open,
+        iff(c_share_union.tuesday_close is null, '', c_share_union.tuesday_close) as tuesday_close,
+        iff(c_share_union.wednesday_hours is null, '', c_share_union.wednesday_hours) as wednesday_hours,
+        iff(c_share_union.wednesday_open is null, '', c_share_union.wednesday_open) as wednesday_open,
+        iff(c_share_union.wednesday_close is null, '', c_share_union.wednesday_close) as wednesday_close,
+        iff(c_share_union.thursday_hours is null, '', c_share_union.thursday_hours) as thursday_hours,
+        iff(c_share_union.thursday_open is null, '', c_share_union.thursday_open) as thursday_open,
+        iff(c_share_union.thursday_close is null, '', c_share_union.thursday_close) as thursday_close, 
+        iff(c_share_union.friday_hours is null, '', c_share_union.friday_hours) as friday_hours,
+        iff(c_share_union.friday_open is null, '', c_share_union.friday_open) as friday_open,
+        iff(c_share_union.friday_close is null, '', c_share_union.friday_close) as friday_close,
+        iff(c_share_union.saturday_hours is null, '', c_share_union.saturday_hours) as saturday_hours,
+        iff(c_share_union.saturday_open is null, '', c_share_union.saturday_open) as saturday_open,
+        iff(c_share_union.saturday_close is null, '', c_share_union.saturday_close) as saturday_close,
+        iff(c_share_union.sunday_hours is null, '', c_share_union.sunday_hours) as sunday_hours,
+        iff(c_share_union.sunday_open is null, '', c_share_union.sunday_open) as sunday_open,
+        iff(c_share_union.sunday_close is null, '', c_share_union.sunday_close) as sunday_close,
+        iff(c_share_union.circle_program is null, '', c_share_union.circle_program) as circle_program,
+        iff(c_share_union.mso_affiliation is null, '', c_share_union.mso_affiliation) as mso_affiliation,
+        iff(c_share_union.rae is null, '', c_share_union.rae) as rae,
+        iff(c_share_union.aso is null, '', c_share_union.aso) as aso,
         c_share_union.provider_directory_form_modified_date as provider_directory_form_modified_date,
-        iff(c_share_union.accepting_new_patients = '', null, c_share_union.accepting_new_patients) as accepting_new_patients,
-        iff(c_share_union.telehealth_restrictions = '', null, c_share_union.telehealth_restrictions) as telehealth_restrictions,
-        iff(c_share_union.mental_health_settings = '', null, c_share_union.mental_health_settings) as mental_health_settings,
-        iff(c_share_union.residential_services = '', null, c_share_union.residential_services) as residential_services,
-        iff(service_types.service_types = '', null, service_types.service_types) as service_types,
-         iff(c_share_union.latitude = '', null, c_share_union.latitude) as latitude,
-        iff(c_share_union.longitude = '', null, c_share_union.longitude) as longitude,
+        iff(c_share_union.accepting_new_patients is null, '', c_share_union.accepting_new_patients) as accepting_new_patients,
+        iff(c_share_union.telehealth_restrictions is null, '', c_share_union.telehealth_restrictions) as telehealth_restrictions,
+        iff(c_share_union.mental_health_settings is null, '', c_share_union.mental_health_settings) as mental_health_settings,
+        iff(c_share_union.residential_services is null, '', c_share_union.residential_services) as residential_services,
+        iff(service_types.service_types is null, '', service_types.service_types) as service_types,
+         iff(c_share_union.latitude is null, '', c_share_union.latitude) as latitude,
+        iff(c_share_union.longitude is null, '', c_share_union.longitude) as longitude,
         -- 6/15 BR update for map_coordinates
-        iff(c_share_union.map_coordinates = '', null, c_share_union.map_coordinates) as map_coordinates,
-        iff(map_popup_cte.map_popup = '', null, map_popup_cte.map_popup) as map_popup,
+        iff(c_share_union.map_coordinates is null, '', c_share_union.map_coordinates) as map_coordinates,
+        iff(map_popup_cte.map_popup is null, '', map_popup_cte.map_popup) as map_popup,
+        c_share_union.bhe_updated as bhe_updated,
         case 
             when c_share_union.hide_address = 'TRUE' then 'yes' 
             when c_share_union.hide_address = 'FALSE' then 'no'
@@ -934,6 +938,9 @@ select
 		when c_prod.external_id is not null and nvl(c_prod.owner_id, '') <> nvl(locs.location_id, '') then 'owner' else null
 		end as owner_action,
         case 
+		when c_prod.external_id is not null and nvl(c_prod.bhe_updated::string, '') <> nvl(c_share_union.bhe_updated::string, '') then 'bhe_updated' else null
+		end as bhe_updated_action,
+        case 
         when c_prod.external_id is not null and (
                  case_name_action is not null 
                   or display_name_action is not null
@@ -1006,6 +1013,7 @@ select
                   -- or 
                   -- map_popup_action is not null
                   or owner_action is not null
+                  or bhe_updated_action is not null
                   ) then 'update' 
         when c_prod.external_id is null and c_share_union.ladders_external_id is not null then 'create'
         else null end as action,
@@ -1114,6 +1122,7 @@ order by action,ladders_external_id, c_prod.date_opened, c_share_union.case_name
 	MEDICALLY_MONITORED_INTENSE_RES_TRTMT,
 	CLINIC_MANAGED_RESIDENTIAL_DETOX,
 	MED_MONITORED_INPATIENT_DETOX,
+    BHE_UPDATED,
 	CASE_NAME_ACTION,
 	DISPLAY_NAME_ACTION,
     ACCOUNT_NAME_ACTION,
@@ -1181,6 +1190,7 @@ order by action,ladders_external_id, c_prod.date_opened, c_share_union.case_name
 	MAP_COORDINATES_ACTION,
 	MAP_POPUP_ACTION,
     OWNER_ACTION,
+    BHE_UPDATED_ACTION,
 	ACTION,
 	IMPORT_DATE
 from final
