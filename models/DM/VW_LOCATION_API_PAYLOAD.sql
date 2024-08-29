@@ -16,9 +16,7 @@ ld as (
     ,dm.external_id_format (parent_account_id) p_id
     ,dm.external_id_format (account_id) a_id
     ,nullif(latitude,'') as new_latitude
-    ,nullif(longitude,'') as new_longitude       
-    ,nullif(latitude,'') as new_latitude
-    ,nullif(longitude,'') as new_longitude       
+    ,nullif(longitude,'') as new_longitude      
     ,
     case when provider_directory_display_name <> '' 
             then replace(replace(replace(provider_directory_display_name, '?', '-'), char(13)), char(10))
