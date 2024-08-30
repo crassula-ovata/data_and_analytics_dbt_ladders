@@ -128,9 +128,9 @@ with payloads as (
                                 '"properties": ' ||
                                 '{ "import_date": ' || '"' || replace(replace(replace(IMPORT_DATE::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || 
                                 case when UPDATE_OTP_ACTION is not null or action = 'create' 
-                                        then ', "opioid_treatment_provider": "' || replace(replace(replace(OPIOID_TREATMENT_PROVIDER, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '",' else '' end || 
+                                        then ', "opioid_treatment_provider": "' || replace(replace(replace(OPIOID_TREATMENT_PROVIDER, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' else '' end || 
                                 case when UPDATE_BHE_ACTION is not null or action = 'create'
-                                    then ', "bhe_updated": "' || replace(replace(replace(BHE_UPDATED, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '",' else '' end ||
+                                    then ', "bhe_updated": "' || replace(replace(replace(BHE_UPDATED, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' else '' end ||
                                 ' } }'
                                ) payload
     from VW_PROVIDERS_CREATE_UPDATE
