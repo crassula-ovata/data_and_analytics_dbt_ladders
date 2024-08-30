@@ -11,7 +11,7 @@ dm_table_data_location as (
 clinic_wo_unit as (
     select case_id from  dm_table_data_clinic 
         where closed = false
-        and data_source <> 'commcare'
+        and coalesce(data_source, '') <> 'commcare'
         and case_id not in (select parent_case_id from dm_table_data_unit where closed=false)
 ),
 final as
