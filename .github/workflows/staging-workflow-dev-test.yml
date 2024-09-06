@@ -1,0 +1,25 @@
+name: staging_job_bha_ladders_dev_test
+run-name: manual trigger from GitHub Actions to Snowflake
+on: workflow_dispatch
+env:
+  DBT_PROFILES_DIR: ./
+  DBT_SNOWFLAKE_GCP_ACCOUNT_STAGING: ${{ secrets.DBT_SNOWFLAKE_GCP_ACCOUNT_STAGING }}
+  DBT_SNOWFLAKE_USER_BHA: ${{ secrets.DBT_SNOWFLAKE_USER_BHA }}
+  DBT_SNOWFLAKE_PWD_BHA: ${{ secrets.DBT_SNOWFLAKE_PWD_BHA }}
+  DBT_SNOWFLAKE_USER: ${{ secrets.DBT_SNOWFLAKE_USER }}
+  DBT_SNOWFLAKE_PWD: ${{ secrets.DBT_SNOWFLAKE_PWD }}
+  DBT_SNOWFLAKE_GCP_ROLE: ${{ secrets.DBT_SNOWFLAKE_GCP_ROLE }}
+jobs:
+  staging_job_bha_ladders_dev_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.10.14'
+      - name: Install dependencies
+        run: |
+          pip install dbt-snowflake
+          dbt deps    
+      - name: Test dbt models
+        run: dbt test --target sfstaging-dev
