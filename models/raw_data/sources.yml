@@ -12,6 +12,12 @@ sources:
       {%- elif target.name=="test-train" -%} DM_LADDERS_TRAIN
       {%- elif target.name=="test" -%} DM_LADDERS_TEST
       {%- elif target.name=="test-staging" -%} DM_LADDERS_TEST_STAGING
+      {%- elif target.name=="sfstaging-dev" -%} DM_CO_CARE_COORD_DEV
+      {%- elif target.name=="sfstaging-qa" -%} DM_CO_CARE_COORD_QA
+      {%- elif target.name=="sfstaging-prod" -%} DM_CO_CARE_COORD_PROD
+      {%- elif target.name=="sfstaging-test-perf" -%} DM_CO_CARE_COORD_PERF
+      {%- elif target.name=="sfstaging-test" -%} DM_CO_CARE_COORD_TEST
+      {%- elif target.name=="sfstaging-test-staging" -%} DM_CO_CARE_COORD_TEST_STAGING
       {%- else -%} invalid_database
       {%- endif -%}    
     schema: 
@@ -32,6 +38,12 @@ sources:
       {%- elif target.name=="test-train" -%} DM_LADDERS_TRAIN      
       {%- elif target.name=="test" -%} DM_CO_CARE_COORD_TEST
       {%- elif target.name=="test-staging" -%} DM_CO_CARE_COORD_TEST_STAGING
+      {%- elif target.name=="sfstaging-dev" -%} DM_CO_CARE_COORD_DEV
+      {%- elif target.name=="sfstaging-qa" -%} DM_CO_CARE_COORD_QA
+      {%- elif target.name=="sfstaging-prod" -%} DM_CO_CARE_COORD_PROD
+      {%- elif target.name=="sfstaging-test-perf" -%} DM_CO_CARE_COORD_PERF
+      {%- elif target.name=="sfstaging-test" -%} DM_CO_CARE_COORD_TEST
+      {%- elif target.name=="sfstaging-test-staging" -%} DM_CO_CARE_COORD_TEST_STAGING
       {%- else -%} invalid_database
       {%- endif -%}  
     schema:
