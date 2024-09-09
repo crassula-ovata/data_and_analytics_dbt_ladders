@@ -8,7 +8,7 @@ dm_table_data_clinic as (
 dm_table_data_location as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
 ),
-cte_all_closed_units AS (
+cte_all_closed_units as (
     select parent_case_id,
     from dm_table_data_unit
     group by parent_case_id
@@ -37,7 +37,7 @@ clinic_wo_unit as (
     select case_id from  dm_table_data_clinic 
         where closed = false
         and coalesce(data_source, '') <> 'commcare'
-        and (case_id not in (select parent_case_id from case_unit where closed=false))
+        and (case_id not in (select parent_case_id from dm_table_data_unit where closed=false))
     union 
     select case_id from  dm_table_data_clinic 
         where closed = false
