@@ -9,7 +9,7 @@ dm_table_data_location as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
 ),
 cte_all_closed_units as (
-    select parent_case_id,
+    select parent_case_id
     from dm_table_data_unit
     group by parent_case_id
     having count(*) = count(date_closed)
@@ -29,7 +29,7 @@ cte_clinic_with_unit_closed_over_two_hours as (
     select parent_case_id, case_id, date_closed
     from cte_ranked_by_closed_date
     where rn = 1 
-        and timestampdiff(hour,current_timestamp_mtn, closed_timestamp_mtn) > 2
+        and timestampdiff(hour,closed_timestamp_mtn, current_timestamp_mtn) >= 2 
 ), 
 -- list of clinics that should get a unit created <-- clinic with no unit cases (both open and close) 
 -- UNION clinic cases with all unit cases closed and most recent closure was over 2 hours ago
