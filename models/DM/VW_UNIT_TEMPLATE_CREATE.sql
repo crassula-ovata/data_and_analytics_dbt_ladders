@@ -8,43 +8,12 @@ dm_table_data_clinic as (
 dm_table_data_location as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
 ),
-cte_all_closed_units as (
-    select parent_case_id
-    from dm_table_data_unit
-    group by parent_case_id
-    having count(*) = count(date_closed)
-        and parent_case_id is not null
-),
-cte_ranked_by_closed_date as (
-    select 
-        parent_case_id, case_id, date_closed,
-        convert_timezone('America/New_York', 'America/Denver', current_timestamp) as  current_timestamp_mtn,
-        convert_timezone('UTC', 'America/Denver', date_closed)  as closed_timestamp_mtn,
-        row_number() over (partition by parent_case_id order  by date_closed desc) as rn
-    from dm_table_data_unit
-    where parent_case_id in (select parent_case_id from cte_all_closed_units)
-), 
--- clinic cases with unit case that was most recently closed over 2 hours ago
-cte_clinic_with_unit_closed_over_two_hours as (
-    select parent_case_id, case_id, date_closed
-    from cte_ranked_by_closed_date
-    where rn = 1 
-        and timestampdiff(hour,closed_timestamp_mtn, current_timestamp_mtn) >= 2 
-), 
--- list of clinics that should get a unit created <-- clinic with no unit cases (both open and close) 
--- UNION clinic cases with all unit cases closed and most recent closure was over 2 hours ago
 clinic_wo_unit as (
     select case_id from  dm_table_data_clinic 
         where closed = false
         and coalesce(data_source, '') <> 'commcare'
-        and (case_id not in (select parent_case_id from dm_table_data_unit))
-    union 
-    select case_id from  dm_table_data_clinic 
-        where closed = false
-        and coalesce(data_source, '') <> 'commcare'            
-        and (case_id in (select parent_case_id from cte_clinic_with_unit_closed_over_two_hours))
-), 
-
+        and case_id not in (select parent_case_id from dm_table_data_unit where closed=false)
+),
 final as
 (
     select
