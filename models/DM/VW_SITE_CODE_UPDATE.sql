@@ -3,14 +3,27 @@ dm_table_data_location as (
     select 
     replace(site_code, '_', '') as site_code_compare,
     * from {{ source('dm_table_data', 'LOCATION') }} where site_code is not null
-)
+),
+-- BR: these clinics/providers are edge case clinics that do not meet the expectation of legacy and bhe clinics having different id's. 
+hades_table_exclude_bhe_in_legacy as (
+    select * from 
+         {{ source('hades_table_data', 'VWS_LADDERS_MAPPED_ACTIVE_LICENSES') }}
+    where upper(account_id) not in 
+        ( 
+        '0014M00002QMJBGQAP',  --Young People in Recovery
+        '0014M00002QMJ2CQAX', -- The Apprentice of Peace Youth Organization dba Trailhead Institute 
+        '0014M00002QMIRYQA5', -- Advocates for Recovery Colorado
+        '0014M00002QMI2YQAH', -- Built To Recover 
+        '0014M00002QMKX0QAP' --Face It TOGETHER 
+        )
+)  
 ,hades_table_data_mapped_active_licenses as (
       select 
         replace(dm.external_id_format(legacy_parent_account_id), '_', '') || '-' || replace(dm.external_id_format(legacy_account_id), '_', '') as legacy_clinic_external_id,
         dm.external_id_format(parent_account_id) || '-' || dm.external_id_format(account_id) as new_clinic_external_id,
         replace(dm.external_id_format(legacy_parent_account_id), '_', '') as legacy_provider_external_id,
         dm.external_id_format(parent_account_id) as new_provider_external_id,
-        * from {{ source('hades_table_data', 'VWS_LADDERS_MAPPED_ACTIVE_LICENSES') }}
+        * from hades_table_exclude_bhe_in_legacy -- {{ source('hades_table_data', 'VWS_LADDERS_MAPPED_ACTIVE_LICENSES') }}
       where legacy_parent_account_id is not null and legacy_account_id is not null
       and parent_account_id is not null and account_id is not null
 )
