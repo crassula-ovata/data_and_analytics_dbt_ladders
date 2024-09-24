@@ -4,7 +4,19 @@ dm_table_data_provider as (
 ), 
 hades_table_data_ladders_active_licenses as (
       --select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
-      select * from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
+      select *,
+        case  
+            when nvl(legacy_parent_account_id, '') <> parent_account_id then 'yes'
+            when  upper(parent_account_id) in 
+                ( 
+                    '0014M00002QMGv0QAH',  --Young People in Recovery
+                    '0014M00002QMIUYQAH', -- The Apprentice of Peace Youth Organization dba Trailhead Institute 
+                    '0014M00002QMGiFQAX', -- Advocates for Recovery Colorado
+                    '0014M00002QMHLCQA5', -- Built To Recover 
+                    '0014M00002QMG6SQAH' --Face It TOGETHER 
+                ) then 'yes'
+        else null end as bhe_updated     
+    from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
 ), 
 locs as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
@@ -13,8 +25,8 @@ p_share as (
     select 
         distinct
         dm.external_id_format (parent_account_id) as parent_account_id,
-        bha_general_acct ,
-        case when nvl(legacy_parent_account_id, '') <> parent_account_id then 'yes' end as bhe_updated,
+        bha_general_acct,
+        bhe_updated
     from hades_table_data_ladders_active_licenses
  --   where parent_account_id = '0014m_00001hh_zzl_q_a_s_'
         order by BHA_GENERAL_ACCT asc
