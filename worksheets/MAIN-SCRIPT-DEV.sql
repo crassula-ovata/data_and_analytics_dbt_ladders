@@ -120,8 +120,21 @@ use role accountadmin;
 create or replace task DM_LADDERS_TEST.UTIL.S3_UNLOAD_TASK
 	warehouse=COMPUTE_WH
 	schedule='USING CRON 20 * * * * America/New_York'
-	as Call metadata.procedures_dev.sp_data_unload('LADDERS_PAYLOAD_UPDATE', 'task_call_sp_data_unload', 'co-carecoordination-test', 'DM_LADDERS_TEST', 'UTIL', 'DM_LADDERS_TEST', 'UNLOAD_SF_TO_S3_GCP_LOCATION|UNLOAD_SF_TO_S3_GCP|', null);
+	as Call metadata.procedures_dev.sp_data_unload('LADDERS_PAYLOAD_UPDATE', 'task_call_sp_data_unload', 'co-carecoordination-test', 'DM_LADDERS_TEST', 'UTIL', 'DM_LADDERS_TEST', 'UNLOAD_SF_TO_S3_GCP_CASE_EXTERNAL_ID|UNLOAD_SF_TO_S3_GCP_LOCATION_SITE_CODE|UNLOAD_SF_TO_S3_GCP_LOCATION|UNLOAD_SF_TO_S3_GCP|', null);
 
 ALTER TASK DM_LADDERS_TEST.UTIL.S3_UNLOAD_TASK RESUME;
 EXECUTE TASK DM_LADDERS_TEST.UTIL.S3_UNLOAD_TASK;
+
+-- the following task is needed for the hades legacy and new bhe data integration --
+-- before the integration is complete, the following task will be needed --
+create or replace task DM_LADDERS_TEST_STAGING.UTIL.LADDERS_MAPPED_TABLE_TASK
+	warehouse=COMPUTE_WH
+	schedule='USING CRON 20 * * * * America/New_York'
+	as BEGIN
+    create or replace TRANSIENT TABLE DM_LADDERS_TEST_STAGING.DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE as
+        select * from DM_LADDERS_TEST_STAGING.DM.VW_LADDERS_MAPPED_INTEGRATION;
+END;
+
+ALTER TASK DM_LADDERS_QA.UTIL.LADDERS_MAPPED_TABLE_TASK RESUME;
+EXECUTE TASK DM_LADDERS_QA.UTIL.LADDERS_MAPPED_TABLE_TASK;
 -- end create task
