@@ -7,7 +7,19 @@ dm_table_data_provider as (
 ), 
 hades_table_data_ladders_active_licenses as (
       --select * from  {{ source('hades_table_data', 'VWS_LADDERS_ACTIVE_LICENSES') }}
-      select * from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
+      select *,
+      case  
+            when nvl(legacy_account_id, '') <> account_id then 'yes'
+            when  upper(account_id) in 
+                ( 
+                    '0014M00002QMJBGQAP',  --Young People in Recovery
+                    '0014M00002QMJ2CQAX', -- The Apprentice of Peace Youth Organization dba Trailhead Institute 
+                    '0014M00002QMIRYQA5', -- Advocates for Recovery Colorado
+                    '0014M00002QMI2YQAH', -- Built To Recover 
+                    '0014M00002QMKX0QAP' --Face It TOGETHER 
+                ) then 'yes'
+        else null end as bhe_updated
+     from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
 ), 
 locs as (
       select * from  {{ source('dm_table_data', 'LOCATION') }}
@@ -110,7 +122,8 @@ c_share as (
         community_mental_health_center,
         community_mental_health_clinic,
         
-        case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+        -- case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+        case when bhe_updated is not null and bhe_updated = 'yes' then
             dm.fn_get_substance_use_services(
                     OUTPATIENT,
                     INTENSIVE_OUTPATIENT_SU_SERVICES,
@@ -129,7 +142,8 @@ c_share as (
             ) else lower(replace(replace(substance_use_services, ' ','_'), ';_', ' ')) 
             end as substance_use_services,
         -- JOE 12/21/23: This is to exclude general_treatment, intensive_outpatient, and outpatient
-        case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+        -- case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+         case when bhe_updated is not null and bhe_updated = 'yes' then
            fn_get_residential_services(
                 DUI_DWI,
                 EDU_TTMT_SVCS_FOR_PERSONS_IN_CJS,
@@ -279,7 +293,8 @@ c_share as (
         concat(latitude, ' ', longitude) as map_coordinates,
         -- JOE 12/21/23: This is to exclude intensive_outpatient and outpatient
 
-        case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+        -- case when coalesce(legacy_account_id, '') <> coalesce(account_id, '') then
+         case when bhe_updated is not null and bhe_updated = 'yes' then
             dm.fn_get_mental_health_settings(
                 hospital, emergency, treatment_evaluation_72_hour, residential_long_term_treatment,
                 residential_short_term_treatment, residential_child_care_facility, crisis_stabilization_unit,
@@ -341,8 +356,7 @@ c_share as (
         ACTIVE_SUD_LICENSE,
         ACTIVE_MH_DESIGNATION,
         ACTIVE_RSSO_LICENSE,
-        CASE WHEN nvl(legacy_account_id, '') <> account_id THEN 'yes' ELSE null end as bhe_updated
-        
+        BHE_UPDATED
     from hades_table_data_ladders_active_licenses 
     order by case_name
 ), 
