@@ -1,4 +1,51 @@
-with payloads as (
+with 
+distinct_template_unit_to_close as (
+    select distinct  case_name, case_id, parent_case_id, owner_id, case_type, external_id 
+    from VW_CLOSE_TEMPLATE_UNIT_CAPACITY_CASES
+),
+payloads as (
+    select
+    case when nullif(CASE_ID,'') is null then EXTERNAL_ID else CASE_ID end PROV_ID, 
+    CASE_TYPE, 
+    parse_json(
+            '{ "create": false' || ', ' ||  
+                '"case_type": "unit",' ||
+                '"case_id": ' || '"' || CASE_ID || '", ' ||
+                '"close": true,' || 
+                -- '"date_closed":' || DATE_CLOSED ||  
+                '"owner_id": ' || '"' || OWNER_ID || '", ' ||
+             '}'
+            ) payload
+    from distinct_template_unit_to_close
+    union
+    select
+    case when nullif(CAPACITY_CASE_ID,'') is null then CAPACITY_EXTERNAL_ID else CAPACITY_CASE_ID end PROV_ID, 
+    CAPACITY_CASE_TYPE, 
+    parse_json(
+            '{ "create": false' || ', ' ||  
+                '"case_type": "capacity",' ||
+                '"case_id": ' || '"' || CAPACITY_CASE_ID || '", ' ||
+                '"close": true,' || 
+                -- '"date_closed":' || DATE_CLOSED ||  
+                '"owner_id": ' || '"' || CAPACITY_OWNER_ID || '", ' ||
+             '}'
+            ) payload
+    from VW_CLOSE_TEMPLATE_UNIT_CAPACITY_CASES
+    union
+    select
+    case when nullif(CAPACITY_CASE_ID,'') is null then CAPACITY_EXTERNAL_ID else CASE_ID end PROV_ID, 
+    CAPACITY_CASE_TYPE, 
+    parse_json(
+            '{ "create": false' || ', ' ||  
+                '"case_type": "capacity",' ||
+                '"case_id": ' || '"' || CAPACITY_CASE_ID || '", ' ||
+                '"close": true,' || 
+                -- '"date_closed":' || DATE_CLOSED ||  
+                '"owner_id": ' || '"' || CAPACITY_OWNER_ID || '", ' ||
+             '}'
+            ) payload
+    from VW_CLOSE_TEMPLATE_UNIT_CAPACITY_CASES
+    union
     --12/1: BR updated logic to include clinic_display_name and additional logic for json
     --11/29: SL added for VW_UNIT_UPDATE start
     select 
