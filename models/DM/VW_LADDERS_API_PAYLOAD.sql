@@ -11,8 +11,7 @@ payloads as (
             '{ "create": false' || ', ' ||  
                 '"case_type": "unit",' ||
                 '"case_id": ' || '"' || CASE_ID || '", ' ||
-                '"close": true,' || 
-                -- '"date_closed":' || DATE_CLOSED ||  
+                '"close": true,' ||   
                 '"owner_id": ' || '"' || OWNER_ID || '", ' ||
              '}'
             ) payload
@@ -26,21 +25,6 @@ payloads as (
                 '"case_type": "capacity",' ||
                 '"case_id": ' || '"' || CAPACITY_CASE_ID || '", ' ||
                 '"close": true,' || 
-                -- '"date_closed":' || DATE_CLOSED ||  
-                '"owner_id": ' || '"' || CAPACITY_OWNER_ID || '", ' ||
-             '}'
-            ) payload
-    from VW_CLOSE_TEMPLATE_UNIT_CAPACITY_CASES
-    union
-    select
-    case when nullif(CAPACITY_CASE_ID,'') is null then CAPACITY_EXTERNAL_ID else CASE_ID end PROV_ID, 
-    CAPACITY_CASE_TYPE, 
-    parse_json(
-            '{ "create": false' || ', ' ||  
-                '"case_type": "capacity",' ||
-                '"case_id": ' || '"' || CAPACITY_CASE_ID || '", ' ||
-                '"close": true,' || 
-                -- '"date_closed":' || DATE_CLOSED ||  
                 '"owner_id": ' || '"' || CAPACITY_OWNER_ID || '", ' ||
              '}'
             ) payload
