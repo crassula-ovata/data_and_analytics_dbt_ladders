@@ -1,8 +1,12 @@
 {% macro fn_validate_lat() %}
 
 case 
-    when latitude between -90 and 90 and not latitude = 0 
-        then latitude else null 
+    when latitude is not null and 
+         latitude != '' and 
+         TRY_TO_NUMBER(latitude, 6) between -90 and 90 and 
+         TRY_TO_NUMBER(latitude, 6) != 0 
+    then latitude 
+    else null 
 end
   
 {% endmacro %}
