@@ -287,8 +287,8 @@ c_share as (
         to_date(to_timestamp(PROVIDER_DIRECTORY_FORM_MODIFIED_DATE_MT, 'MM/DD/YYYY HH12:MI AM')) as provider_directory_form_modified_date, 
         accepting_new_patients,
         telehealth_restrictions,
-        dm.fn_validate_lat(latitude),
-        dm.fn_validate_long(longitude),
+        dm.fn_validate_lat(latitude) as latitude,
+        dm.fn_validate_long(longitude) as longitude,
         -- 6/15 BR updates to include map_coordintes
         concat(dm.fn_validate_lat(latitude), ' ', dm.fn_validate_long(longitude)) as map_coordinates,
         -- JOE 12/21/23: This is to exclude intensive_outpatient and outpatient
