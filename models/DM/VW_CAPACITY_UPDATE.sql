@@ -16,6 +16,15 @@ select
         capacity.parent_relationship,
         capacity.parent_case_type,
         capacity.parent_case_id,
+        -- clinic_phone_display
+        case when nvl(capacity.clinic_phone_display, '') <> nvl(clinic.phone_display, '')
+            then clinic.phone_display else null
+            end as clinic_phone_display,
+        -- clinic_referral_type
+        case when nvl(capacity.clinic_referral_type, '') <> nvl(clinic.referral_type, '')
+            then DM.FN_FORMAT_REFERRAL_TYPE(clinic.referral_type) else null
+            end as clinic_referral_type,
+        -- clinic_case_name_display
         case when nvl(capacity.clinic_case_name_display, '') <> nvl(clinic.case_name, '') 
             then clinic.case_name else null 
             end as clinic_case_name_display,
@@ -23,7 +32,7 @@ select
             then clinic.map_coordinates else null 
             end as clinic_map_coordinates,
          case  
-            when --nvl(DM.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <> nvl(capacity.clinic_map_popup, '')  <>  nvl(capacity.clinic_map_popup, '')
+            when 
             nvl(DM.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type), '') <>  nvl(capacity.clinic_map_popup, '')
                 then DM.GET_MAP_POPUP(clinic.display_name, clinic.phone_display, clinic.address_full, clinic.insurance, clinic.referral_type)
             else null end as clinic_map_popup,
@@ -53,6 +62,8 @@ select
 final as (
 select * from cte_check_property_update 
 where 
+    clinic_phone_display is not null or
+    clinic_referral_type is not null or
     clinic_case_name_display is not null or
     clinic_map_coordinates is not null or
     clinic_map_popup is not null or
@@ -68,6 +79,8 @@ select
     PARENT_RELATIONSHIP,
     PARENT_CASE_TYPE,
     PARENT_CASE_ID,
+    clinic_phone_display,
+    clinic_referral_type,
     clinic_case_name_display,
     clinic_map_coordinates,
     clinic_map_popup,
