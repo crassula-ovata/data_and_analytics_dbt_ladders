@@ -1,11 +1,11 @@
 {% macro fn_format_referral_type() %}   
 
 fromat_map = {
-    "court_mandated_referrals_only": "Court Mandated Referrals Only",
-    "insurance_authorization": "Insurance Pre-Authorization",
-    "physical_assessments": "Physical Assessments",
-    "psychiatric_assessments": "Psychiatric Assessments",
-    "walk_in": "Walk-In"
+    "court_mandated_referrals_only": "Court Mandated Referrals Only,",
+    "insurance_authorization": "Insurance Pre-Authorization,",
+    "physical_assessments": "Physical Assessments,",
+    "psychiatric_assessments": "Psychiatric Assessments,",
+    "walk_in": "Walk-In,"
 }
 
 def fn_format_referral_type(REFERRAL_TYPE):
