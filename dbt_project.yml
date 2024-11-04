@@ -60,4 +60,5 @@ models:
         - "{{ create_fn_get_substance_use_services() }}"
         - "{{ create_fn_validate_lat() }}"
         - "{{ create_fn_validate_long() }}"
+        - "{{ create_fn_format_referral_type() }}"
 
