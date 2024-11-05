@@ -20,10 +20,13 @@ select
         case when nvl(capacity.clinic_phone_display, '') <> nvl(clinic.phone_display, '')
             then clinic.phone_display else null
             end as clinic_phone_display,
-        -- clinic_referral_type
-        case when nvl(capacity.clinic_referral_type, '') <> nvl(clinic.referral_type, '')
-            then DM.FN_FORMAT_REFERRAL_TYPE(clinic.referral_type) else null
-            end as clinic_referral_type,
+        -- clinic_referral_type_display
+        case 
+            when nvl(capacity.clinic_referral_type_display, '') = '' and nvl(clinic.referral_type, '') = '' then 'N/A'
+            when nvl(clinic.referral_type, '') = '' and capacity.clinic_referral_type_display ='N/A' then null 
+            when nvl(capacity.clinic_referral_type_display, '') <> nvl(clinic.referral_type, '') 
+                then DM.FN_FORMAT_REFERRAL_TYPE(clinic.referral_type) else null 
+            end as clinic_referral_type_display,
         -- clinic_case_name_display
         case when nvl(capacity.clinic_case_name_display, '') <> nvl(clinic.case_name, '') 
             then clinic.case_name else null 
@@ -63,7 +66,7 @@ final as (
 select * from cte_check_property_update 
 where 
     clinic_phone_display is not null or
-    clinic_referral_type is not null or
+    clinic_referral_type_display is not null or
     clinic_case_name_display is not null or
     clinic_map_coordinates is not null or
     clinic_map_popup is not null or
@@ -80,7 +83,7 @@ select
     PARENT_CASE_TYPE,
     PARENT_CASE_ID,
     clinic_phone_display,
-    clinic_referral_type,
+    clinic_referral_type_display,
     clinic_case_name_display,
     clinic_map_coordinates,
     clinic_map_popup,

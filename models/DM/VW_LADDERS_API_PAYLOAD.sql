@@ -134,8 +134,8 @@ payloads as (
         '"properties": {' ||
         case when nullif(clinic_phone_display,'') is not null 
                 then '"clinic_phone_display": ' || ifnull('"' || replace(replace(replace(clinic_phone_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
-        case when nullif(clinic_referral_type,'') is not null 
-                then '"clinic_referral_type": ' || ifnull('"' || replace(replace(replace(clinic_referral_type, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
+        case when nullif(clinic_referral_type_display,'') is not null 
+                then '"clinic_referral_type_display": ' || ifnull('"' || replace(replace(replace(clinic_referral_type_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
         case when nullif(clinic_case_name_display,'') is not null 
                 then '"clinic_case_name_display": ' || ifnull('"' || replace(replace(replace(clinic_case_name_display, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"','""')  || ',' else '' end ||
         case when nullif(clinic_map_coordinates,'') is not null 
