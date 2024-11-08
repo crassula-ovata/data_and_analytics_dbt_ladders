@@ -137,7 +137,7 @@ data_and_analytics_dbt_bha_ladders:
     sfstaging-test:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT_STAGING') }}"
       database: DM_LADDERS_TEST
-      password: "{{ env_var('DBT_SNOWFLAKE_PWD_GCP_STAGING') }}"
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
       role: user_dbt_test
       schema: DM
       threads: 1
@@ -148,7 +148,7 @@ data_and_analytics_dbt_bha_ladders:
     sfstaging-test-staging:
       account: "{{ env_var('DBT_SNOWFLAKE_GCP_ACCOUNT_STAGING') }}"
       database: DM_LADDERS_TEST_STAGING
-      password: "{{ env_var('DBT_SNOWFLAKE_PWD_GCP_STAGING') }}"
+      password: "{{ env_var('DBT_SNOWFLAKE_PWD') }}"
       role: user_dbt_test
       schema: DM
       threads: 1
