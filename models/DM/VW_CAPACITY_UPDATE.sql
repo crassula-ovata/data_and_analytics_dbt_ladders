@@ -24,7 +24,7 @@ select
         case 
             when nvl(capacity.clinic_referral_type_display, '') = '' and nvl(clinic.referral_type, '') = '' then 'N/A'
             when nvl(clinic.referral_type, '') = '' and capacity.clinic_referral_type_display ='N/A' then null 
-            when nvl(capacity.clinic_referral_type_display, '') <> nvl(clinic.referral_type, '') 
+            when nvl(DM.FN_FORMAT_REFERRAL_TYPE(clinic.referral_type), '') <> nvl(capacity.clinic_referral_type_display, '')
                 then DM.FN_FORMAT_REFERRAL_TYPE(clinic.referral_type) else null 
             end as clinic_referral_type_display,
         -- clinic_case_name_display
@@ -54,7 +54,7 @@ select
        case 
             when clinic.insurance is null and capacity.clinic_insurance_display is null then 'N/A'
             when clinic.insurance is null and nvl(capacity.clinic_insurance_display, '') = 'N/A' then null 
-            when   nvl(DM.FN_INSURANCE_DISPLAY(clinic.insurance), '') <> nvl(capacity.clinic_insurance_display, '') 
+            when  nvl(DM.FN_INSURANCE_DISPLAY(clinic.insurance), '') <> nvl(capacity.clinic_insurance_display, '') 
                 then DM.FN_INSURANCE_DISPLAY(clinic.insurance)
             else null end as clinic_insurance_display
     from  dm_table_data_capacity capacity 
