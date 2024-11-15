@@ -2,6 +2,12 @@ with
 dm_table_data_clinic as (
       select 
         replace(external_id, '_', '') as external_id_compare,
+        case
+        when case_id in ({{get_vcphcs_parent_case_id('child_value1')}})
+        then '{{get_vcphcs_parent_case_id('parent_value1')}}'
+        when case_id in ({{get_vcphcs_parent_case_id('child_value2')}})
+        then '{{get_vcphcs_parent_case_id('parent_value2')}}'
+        else parent_case_id end as new_parent_case_id,
         * 
       from {{ source('dm_table_data', 'CASE_CLINIC') }} where closed = 'FALSE' and external_id is not null
 ) 
@@ -251,6 +257,7 @@ select
     dm_table_data_clinic.external_id_compare,
     dm_table_data_clinic.external_id,
     dm_table_data_clinic.case_id,
+    dm_table_data_clinic.new_parent_case_id,
     dm_table_data_clinic.case_type,
     dm_table_data_clinic.case_name,
     current_timestamp() as import_date
@@ -268,6 +275,9 @@ select
             '"case_id": ' || '"' || case_id || '", ' ||            
             '"external_id": ' || '"' || new_clinic_external_id || '", ' ||
             '"case_name": ' || '"' || CASE_NAME  || '",' || 
+            '"indices": ' || 
+            '{ "parent": {' || 
+                            '"case_id": ' || '"' || new_parent_case_id || '" } },' ||
             '"properties": {' ||
                 '"import_date": ' || '"' || replace(replace(replace(IMPORT_DATE::string, '"', '\\"'), '\n', '\\n'), '\r', '\\r') || '"' || 
             ' } }') payload 
