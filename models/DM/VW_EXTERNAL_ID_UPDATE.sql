@@ -251,7 +251,6 @@ select
     dm_table_data_clinic.external_id_compare,
     dm_table_data_clinic.external_id,
     dm_table_data_clinic.case_id,
-    dm_table_data_clinic.parent_case_id,
     dm_table_data_clinic.case_type,
     dm_table_data_clinic.case_name,
     current_timestamp() as import_date
