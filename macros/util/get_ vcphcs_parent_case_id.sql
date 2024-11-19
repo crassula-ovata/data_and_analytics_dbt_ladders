@@ -1,4 +1,13 @@
 {% macro get_vcphcs_parent_case_id(param_type) %}
+/*
+example usage:
+        case
+        when case_id in ({{get_vcphcs_parent_case_id('child_value1')}})
+        then '{{get_vcphcs_parent_case_id('parent_value1')}}'
+        when case_id in ({{get_vcphcs_parent_case_id('child_value2')}})
+        then '{{get_vcphcs_parent_case_id('parent_value2')}}'
+        else parent_case_id end as new_parent_case_id,
+*/
 
     {% if target.name=='dev' or target.name=='sfstaging-dev' %}
         {% set child_value1 = '\'19675d8a-9306-4d3d-b1c0-7e8892726867\', \'d182b189-2fab-49fa-8c42-7ced2237c9de\', \'4b3506a7-82da-4e3a-b64a-c1d969ebe0ae\'' %}
