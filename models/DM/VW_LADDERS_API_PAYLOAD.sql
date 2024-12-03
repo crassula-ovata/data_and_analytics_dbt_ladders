@@ -98,6 +98,8 @@ payloads as (
                     then '"clinic_map_coordinates": ' || '"' || clinic_map_coordinates ||  '"' || ',' else '' end ||
             case when nullif(clinic_map_popup,'') is not null 
                     then '"clinic_map_popup": ' || '"' || clinic_map_popup ||  '"' || ',' else '' end ||
+            case when nullif(clinic_case_id,'') is not null 
+                    then '"clinic_case_id": ' || '"' || clinic_case_id ||  '"' || ',' else '' end ||
             case when nullif(unit_gender,'') is not null 
                     then '"unit_gender": ' || '"' || unit_gender ||  '"' || ',' else '' end ||
             case when nullif(unit_population_served,'') is not null 
