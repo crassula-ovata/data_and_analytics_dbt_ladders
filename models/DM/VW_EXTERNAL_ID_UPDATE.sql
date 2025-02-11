@@ -186,7 +186,7 @@ dm_table_data_clinic as (
         '0014M00002QMJ2CQAX', -- The Apprentice of Peace Youth Organization dba Trailhead Institute 
         '0014M00002QMIRYQA5', -- Advocates for Recovery Colorado
         '0014M00002QMI2YQAH', -- Built To Recover 
-        '0014M00002QMKX0QAP' --Face It TOGETHER
+        '0014M00002QMKX0QAP', --Face It TOGETHER
         '0014M00002KIXB3QAB'  --Milestone Community Wellness, LLC 
         )
 )  
