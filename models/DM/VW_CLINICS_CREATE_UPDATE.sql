@@ -16,7 +16,8 @@ hades_table_data_ladders_active_licenses as (
                     '0014M00002QMJ2CQAX', -- The Apprentice of Peace Youth Organization dba Trailhead Institute 
                     '0014M00002QMIRYQA5', -- Advocates for Recovery Colorado
                     '0014M00002QMI2YQAH', -- Built To Recover 
-                    '0014M00002QMKX0QAP' --Face It TOGETHER 
+                    '0014M00002QMKX0QAP' --Face It TOGETHER
+                    '0014M00002KIXB3QAB'  --Milestone Community Wellness, LLC 
                 ) then 'yes'
         else null end as bhe_updated
      from DM.VW_LADDERS_MAPPED_INTEGRATION_TABLE
